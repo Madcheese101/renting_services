@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include renting_services *.css
+recursive-include renting_services *.csv
+recursive-include renting_services *.html
+recursive-include renting_services *.ico
+recursive-include renting_services *.js
+recursive-include renting_services *.json
+recursive-include renting_services *.md
+recursive-include renting_services *.png
+recursive-include renting_services *.py
+recursive-include renting_services *.svg
+recursive-include renting_services *.txt
+recursive-exclude renting_services *.pyc
