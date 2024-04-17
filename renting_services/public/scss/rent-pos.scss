@@ -1,0 +1,78 @@
+.point-of-sale-app > .items-selector > .filter-section > .label
+{
+    grid-column: span 2 / span 2;
+    padding-bottom: var(--padding-xs);
+}
+
+.point-of-sale-app > .items-selector > .filter-section > .occ-date-field {
+    grid-column: span 5 / span 5;
+    display: flex;
+    align-items: center;
+}
+
+.point-of-sale-app > .items-selector > .filter-section > .duration-field {
+    grid-column: span 2 / span 2;
+    display: none;
+    align-items: center;
+    margin: 0px var(--margin-sm);
+}
+
+.point-of-sale-app > .item-details-container > .calendar-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    -moz-column-gap: var(--padding-md);
+    column-gap: var(--padding-md);
+}
+
+.point-of-sale-app > .item-details-container > .calendar-container > .add-to-cart{
+    background-color: var(--blue-500);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--padding-sm);
+    margin-top: var(--margin-sm);
+    border-radius: var(--border-radius-md);
+    font-size: var(--text-lg);
+    font-weight: 700;
+}
+
+.point-of-sale-app > .item-details-container > .calendar-container > 
+.occ-date-control, .add-to-cart, .rent-status, .rent-status-sep {
+    grid-column: span 2 / span 2;
+    padding: 10px 0 15px 0;
+}
+
+.point-of-sale-app > .item-details-container > .item-display > .item-name-desc-price {
+    flex: 1 1 0%;
+    display: flex;
+    flex-direction: column;
+    justify-content: unset;
+    margin-right: unset;
+}
+
+.point-of-sale-app > .item-details-container > .calendar-container > .ok-pill, .no-pill {
+    height: 30px;
+    align-self: center;
+    margin-top: 15px;
+}
+
+.point-of-sale-app > .past-order-summary > .invoice-summary-wrapper > .abs-container > .summary-btns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    -moz-row-gap: var(--padding-sm);
+    row-gap: var(--padding-sm);
+}
+
+.point-of-sale-app > .items-selector > .items-container {
+    display: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--margin-lg);
+    padding: var(--padding-lg);
+    padding-top: var(--padding-xs);
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+
+
