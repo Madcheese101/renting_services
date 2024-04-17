@@ -1,3 +1,4 @@
+import json
 import frappe
 from functools import reduce
 from frappe import _, msgprint, throw, scrub
@@ -10,7 +11,8 @@ from erpnext.accounts.doctype.bank_account.bank_account import (
 	get_bank_account_details,
 	get_party_bank_account,
 )
-from erpnext.accounts.doctype.sales_invoice.sales_invoice import (SalesInvoice, get_mode_of_payments_info)
+
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import (SalesInvoice, get_mode_of_payments_info, update_multi_mode_option)
 from erpnext.accounts.doctype.payment_entry.payment_entry import (
 	set_party_type,
 	set_party_account,
@@ -25,29 +27,70 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import (
 	get_reference_as_per_payment_terms
 )
 class RentInvoice(SalesInvoice):    
-    @frappe.whitelist()
-    def insert_payment(self, pdoc):
-        doc = frappe.get_doc(pdoc)
-        doc.set_amounts()
-        doc.docstatus = 1
+    
+	@frappe.whitelist()
+	def recieve_and_clean(self, user=None, notes=None):
+		doc = frappe.new_doc("Cleaning")
+		doc.invoice_id = self.name
+		doc.employee = user
+		if user:
+			doc.employee = user
+			doc.status = "قيد التنظيف"
+			doc.accept_date = nowdate()
 		
-        # doc.save()
-        doc.insert(ignore_permissions=True)
+		total_qty = 0
+		for item in self.get("items"):
+			doc.append("items", {
+				"item_code": item.item_code,
+				"qty": item.qty
+			})
+			total_qty += item.qty
+		doc.total_qty = total_qty
+		doc.notes = str(notes) if notes else ''
+		doc.flags.ignore_mandatory = True
+		doc.flags.ignore_permissions=True
+		doc.save()
+		doc.submit()
 
-    @frappe.whitelist()
-    def get_mode_of_payments(self):
-        pos = frappe.get_doc("POS Profile", self.pos_profile)
-        mode_of_payments = [d.mode_of_payment for d in pos.get("payments")]
-        mode_of_payments_info = get_mode_of_payments_info(mode_of_payments, self.company)
-        modes = []
-        for key, value in mode_of_payments_info.items():
-            modes.append({"mode_of_payment": key, 
-                    "account": value.default_account, 
-                    "type": value.type, "base_amount": 0})
-            
-        return modes or "nothing"
+		self.db_set('rent_status', 'نظافة')
 
+	@frappe.whitelist()
+	def insert_payment(self, pdoc):
+		docs = pdoc
+		for doc in docs:
+			_doc = frappe.get_doc(doc)
+			_doc.set_amounts()
+			_doc.docstatus = 1
+			_doc.insert(ignore_permissions=True)
 
+		status = self.rent_status
+		# grand_total = self.grand_total
+		# outstanding = self.outstanding_amount
+		if status == "غير مؤكد":
+			self.db_set('rent_status', 'محجوز')
+		if status == "جاهز" and self.outstanding_amount == 0:
+			self.db_set('rent_status', 'مكتمل')
+
+	@frappe.whitelist()
+	def get_mode_of_payments(self):
+		pos = frappe.get_doc("POS Profile", self.pos_profile)
+		mode_of_payments = [d.mode_of_payment for d in pos.get("payments")]
+		mode_of_payments_info = get_mode_of_payments_info(mode_of_payments, self.company)
+		modes = []
+		for key, value in mode_of_payments_info.items():
+			modes.append({"mode_of_payment": key, 
+					"account": value.default_account, 
+					"type": value.type, "base_amount": 0})
+			
+		return modes or "nothing"
+	
+	@frappe.whitelist()
+	def reset_mode_of_payments(self):
+		if self.pos_profile:
+			pos_profile = frappe.get_cached_doc("POS Profile", self.pos_profile)
+			update_multi_mode_option(self, pos_profile)
+			self.paid_amount = 0
+			
 @frappe.whitelist()
 def get_payment_entry(
 	dt,
@@ -58,7 +101,9 @@ def get_payment_entry(
 	party_type=None,
 	payment_type=None,
 	reference_date=None,
+	reference_no=None
 ):
+	# eval:(doc.paid_from_account_type == 'Bank' || doc.paid_to_account_type == 'Bank')
 	doc = frappe.get_doc(dt, dn)
 	over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
 	if dt in ("Sales Order", "Purchase Order") and flt(doc.per_billed, 2) >= (
@@ -103,8 +148,9 @@ def get_payment_entry(
 	pe.company = doc.company
 	pe.cost_center = doc.get("cost_center")
 	pe.posting_date = nowdate()
-	pe.reference_date = reference_date
 	pe.mode_of_payment = doc.get("mode_of_payment")
+	pe.reference_date = reference_date
+	pe.reference_no = reference_no
 	pe.party_type = party_type
 	pe.party = doc.get(scrub(party_type))
 	pe.contact_person = doc.get("contact_person")

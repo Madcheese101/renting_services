@@ -9,7 +9,6 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 			args: args,
 			callback: function(r) {
 				r.message.mode_of_payment = args.mode_of_payment;
-				console.log(r.message);
 				var doclist = frappe.model.sync(r.message);
 				me.frm.call(
 					{doc: me.frm.doc,
@@ -19,7 +18,22 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 			}
 		});
 	}
-	show_dialog(doc){	
+	make_rent_payment_entry(argss) {
+		let via_journal_entry = this.frm.doc.__onload && this.frm.doc.__onload.make_payment_via_journal_entry;
+		if(this.has_discount_in_schedule() && !via_journal_entry) {
+			// If early payment discount is applied, ask user for reference date
+			this.prompt_user_for_reference_date();
+		} else {
+			let args = { "dt": this.frm.doc.doctype,
+				"dn": this.frm.doc.name, 
+				"party_type":"Customer",
+				"mode_of_payment": argss.mode_of_payment,
+				"bank_account":argss.account,
+				"bank_amount":argss.bank_amount};
+			this.make_mapped_rent_payment_entry(args);
+		}
+	}
+	show_dialog(){	
 		const me = this;
 		this.frm.call({
 			doc: this.frm.doc,
@@ -68,20 +82,35 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 			}
 		});
 	}
-	make_rent_payment_entry(argss) {
-		let via_journal_entry = this.frm.doc.__onload && this.frm.doc.__onload.make_payment_via_journal_entry;
-		if(this.has_discount_in_schedule() && !via_journal_entry) {
-			// If early payment discount is applied, ask user for reference date
-			this.prompt_user_for_reference_date();
-		} else {
-			let args = { "dt": this.frm.doc.doctype,
-				"dn": this.frm.doc.name, 
-				"party_type":"Customer",
-				"mode_of_payment": argss.mode_of_payment,
-				"bank_account":argss.account,
-				"bank_amount":argss.bank_amount};
-			this.make_mapped_rent_payment_entry(args);
-		}
+	cleaning_dialog(){
+		const me = this;
+		
+		let d = new frappe.ui.Dialog({
+			title: 'ارجاع و إرسال للتنظيف',
+			fields: [
+				{
+					label: 'تكليف موظف (اختياري)',
+					fieldname: 'employee',
+					fieldtype: 'Link',
+					options: 'User',
+					ignore_user_permissions: 1,
+					read_only_depends_on: (!frappe.user.has_role('Accounts Manager'))
+				}
+			],
+			size: 'small', // small, large, extra-large 
+			primary_action_label: 'إرجاع/ارسال للتنظيف',
+			primary_action(values) {
+				// do if has certain role here
+				let user = values['employee'] || null;
+				me.frm.call({
+					doc: me.frm.doc,
+					method: "recieve_and_clean",
+					args: {"user": user}
+				});
+				d.hide();
+			}
+		});
+		d.show();
 	}
 	refresh(doc, dt, dn) {
 		const me = this;
@@ -93,10 +122,21 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 			this.frm.add_custom_button(
 				__('دفع الإيجار'),
 				// () => this.make_rent_payment_entry(),
-				() => this.show_dialog(doc),
-				__('Renting Actions')
+				() => this.show_dialog(),
+				__('اجراءات الإيجار')
 			);
-			this.frm.page.set_inner_btn_group_as_primary(__('Renting Actions'));
+			this.frm.page.set_inner_btn_group_as_primary(__('اجراءات الإيجار'));
+		}
+
+		// Recieve Items and send to cleaning
+		if (doc.docstatus == 1 && doc.outstanding_amount==0 &&
+			doc.rent_status == "محجوز") {
+			this.frm.add_custom_button(
+				__('إرجاع/تنظيف'),
+				() => this.cleaning_dialog(),
+				__('اجراءات الإيجار')
+			);
+			this.frm.page.set_inner_btn_group_as_primary(__('اجراءات الإيجار'));
 		}
 	}
 }
@@ -105,7 +145,20 @@ extend_cscript(cur_frm.cscript, new erpnext.accounts.RentInvoiceController({frm:
 
 
 frappe.ui.form.on('Sales Invoice', {
-    // setup: function(frm) {
-	// 	// frm.call("print_msg")
-	// }
+	refresh(frm){
+		if(frm.doc.__islocal){
+			let delivery_date = frappe.datetime.add_days(frm.doc.posting_date, 1);
+			frm.set_value("delivery_date",delivery_date);
+			let return_day = frappe.datetime.add_days(frm.doc.delivery_date, 1);
+			frm.set_value("return_date", return_day);
+		}
+	},
+	guarantee_type(frm){
+		if (frm.doc.guarantee_type !== 'موظف' && frm.doc.guarantee_type !== ''){
+			frm.set_value("guarantee_id", frm.doc.name);
+		}
+		else if(frm.doc.guarantee_type !== ''){
+			frm.set_value("guarantee_id", frappe.session.user_fullname);
+		}
+	}
 })
