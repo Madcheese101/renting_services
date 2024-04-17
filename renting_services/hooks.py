@@ -11,7 +11,8 @@ app_license = "MIT"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/renting_services/css/renting_services.css"
+app_include_css = "renting-services.bundle.css"
+app_include_js = "renting_services.bundle.js"
 # app_include_js = "/assets/renting_services/js/renting_services.js"
 
 # include js, css files in header of web template
@@ -79,7 +80,7 @@ doctype_js = {"Payment Entry" : "public/js/payment_entry.js",
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "renting_services.utils.before_app_install"
+before_app_install = "renting_services.utils.utils.create_defaults"
 # after_app_install = "renting_services.utils.after_app_install"
 
 # Integration Cleanup
@@ -150,7 +151,14 @@ override_doctype_class = {
 #		"renting_services.tasks.monthly"
 #	],
 # }
-
+scheduler_events = {
+	"cron": {
+        # run at 12AM
+        "0 0 * * *":[
+            "renting_services.renting_services.tasks.tasks.draft_invoice_check",
+        ]
+	}
+}
 # Testing
 # -------
 
@@ -219,3 +227,57 @@ override_doctype_class = {
 # auth_hooks = [
 #	"renting_services.auth.validate"
 # ]
+
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            
+            [
+                "name",
+                "in",
+                (
+                    "Sales Invoice-custom_return_date",
+                    "Sales Invoice-custom_delivery_date",
+                    "Sales Invoice-custom_حالة_الحجز",
+                    "Warehouse-custom_reserve_warehouse",
+                    "POS Profile-custom_rent_allow_credit_sale",
+                    "POS Profile-custom_allowed_rent_period",
+                    "Sales Invoice-custom_name__id",
+                    "Sales Invoice-custom_name__id",
+                    "POS Profile-custom_limit_cashiers"
+                ),
+            ]
+        ]
+    },
+    {
+        "doctype": "Property Setter",
+        "filters": [
+            
+            [
+                "name",
+                "in",
+                (
+                    "Sales Invoice-is_return-depends_on", 
+                    "Sales Invoice-payments_tab-label", 
+                    "Sales Invoice-terms_tab-depends_on", 
+                    "Sales Invoice-more_info_tab-depends_on", 
+                    "Sales Invoice-payment_schedule_section-depends_on", 
+                    "Sales Invoice-contact_and_address_tab-label", 
+                    "Sales Invoice-is_pos-label", 
+                    "Sales Invoice-loyalty_points_redemption-depends_on", 
+                    "Sales Invoice-payments_section-depends_on", 
+                    "Sales Invoice-payments_section-collapsible", 
+                    "Sales Invoice-packing_list-depends_on", 
+                    "Sales Invoice-pricing_rule_details-depends_on", 
+                    "Sales Invoice-sec_tax_breakup-depends_on", 
+                    "Sales Invoice-section_break_43-depends_on", 
+                    "Sales Invoice-section_break_40-depends_on", 
+                    "Sales Invoice-taxes_section-depends_on", 
+                    "Sales Invoice-currency_and_price_list-depends_on", 
+                    "Sales Invoice-accounting_dimensions_section-depends_on"
+                ),
+            ]
+        ]
+    }
+]
