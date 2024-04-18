@@ -52,17 +52,30 @@ class Cleaning(Document):
 		self.flags.ignore_validate_update_after_submit = True
 		self.save(ignore_permissions=True)
 		notes = f"ملاحظات من المحل: <br>  {self.notes} <br> ملاحظات من قسم التنظيف: <br> {new_notes}"
+
 		if repair_items:
-			repair = frappe.new_doc("Repair")
-			repair.invoice_id = self.invoice_id
-			repair.cleaning_id = self.name
-			repair.total_qty = total_ready
-			repair.set("items", repair_items)
-			repair.notes = notes
-			repair.flags.ignore_mandatory = True
-			repair.flags.ignore_permissions=True
-			repair.save()
-			repair.submit()
+			if self.invoice_id:
+				repair = frappe.new_doc("Repair")
+				repair.invoice_id = self.invoice_id
+				repair.cleaning_id = self.name
+				repair.total_qty = total_ready
+				repair.set("items", repair_items)
+				repair.notes = notes
+				repair.flags.ignore_mandatory = True
+				repair.flags.ignore_permissions=True
+				repair.save()
+				repair.submit()
+			else:
+				send_to_store = frappe.new_doc("Store Recieve Item")
+				send_to_store.invoice_id = self.invoice_id
+				send_to_store.repair_id = self.name
+				send_to_store.total_qty = total_ready
+				send_to_store.set("items", repair_items)
+				send_to_store.notes = notes
+				send_to_store.flags.ignore_mandatory = True
+				send_to_store.flags.ignore_permissions=True
+				send_to_store.save()
+				send_to_store.submit()
 
 		
 
