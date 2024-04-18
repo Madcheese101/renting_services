@@ -17,6 +17,7 @@ class Cleaning(Document):
 				'name' : self.name, 
 				'description' : 'تم تعيينك لتولي فاتورة تنظيف الأصناف التالية'}
 			add(args, ignore_permissions=True)
+			self.set_status()
 
 	def on_cancel(self):
 		if self.invoice_id:
@@ -37,7 +38,8 @@ class Cleaning(Document):
 				'name' : self.name, 
 				'description' : 'تم تعيينك لتولي فاتورة تنظيف الأصناف التالية'}
 			add(args, ignore_permissions=True)
-	
+		self.set_status()
+
 	def set_status(self):
 		if self.total_ready > 0 and self.total_ready != self.total_qty:
 			self.db_set('status', 'مكتمل جزئي')

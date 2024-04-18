@@ -41,6 +41,7 @@ class Repair(Document):
 				'name' : self.name, 
 				'description' : 'تم تعيينك لتولي فاتورة صيانة الأصناف التالية'}
 			add(args, ignore_permissions=True)
+		self.set_status()
 			
 	def set_status(self):
 		if self.total_ready > 0 and self.total_ready != self.total_qty:
@@ -74,6 +75,7 @@ class Repair(Document):
 		self.flags.ignore_validate_update_after_submit = True
 		self.save(ignore_permissions=True)
 		notes = f"{self.notes} <br> ملاحظات من قسم الصيانة: <br> {new_notes}"
+		
 		if repair_items:
 			send_to_store = frappe.new_doc("Store Recieve Item")
 			send_to_store.invoice_id = self.invoice_id
