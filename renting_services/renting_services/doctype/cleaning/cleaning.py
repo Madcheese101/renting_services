@@ -8,6 +8,16 @@ from frappe.utils import get_fullname
 from renting_services.utils.utils import update_child_ready_qty
 
 class Cleaning(Document):
+	def on_submit(self):
+		if self.employee and self.employee != frappe.session.user:
+			from frappe.desk.form.assign_to import add
+			args = {
+				'assign_to' : [self.employee], 
+				'doctype' : 'Cleaning',
+				'name' : self.name, 
+				'description' : 'تم تعيينك لتولي فاتورة تنظيف الأصناف التالية'}
+			add(args, ignore_permissions=True)
+
 	def on_cancel(self):
 		if self.invoice_id:
 			frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'خارج')
