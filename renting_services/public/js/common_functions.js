@@ -45,22 +45,27 @@ renting_services.common = {
                             );
                         }
                     }
-                    frm.add_custom_button(
-                        this.doctypes_defaults[frm.doctype].part_finish,
-                        () => this.choose_dialog({
-                            frm: frm,
-                            child_docname: "items",
-                            child_doctype: "Process Items",
-                            cannot_add_row: true,
-                        }),
-                        btn_grp_label
-                    );
-                    
-                    frm.add_custom_button(
-                        this.doctypes_defaults[frm.doctype].finish,
-                        () => this.add_notes(doc),
-                        btn_grp_label
-                    );
+
+                    if(doc.total_ready !== doc.total_qty && doc.status!=='إنتظار'){
+                        // Partial Finsih repair/cleaning BTN
+                        frm.add_custom_button(
+                            this.doctypes_defaults[frm.doctype].part_finish,
+                            () => this.choose_dialog({
+                                frm: frm,
+                                child_docname: "items",
+                                child_doctype: "Process Items",
+                                cannot_add_row: true,
+                            }),
+                            btn_grp_label
+                        );
+                        
+                        // complete finish repair/cleaning BTN
+                        frm.add_custom_button(
+                            this.doctypes_defaults[frm.doctype].finish,
+                            () => this.add_notes(doc), //notes dialog before finish clean/repair
+                            btn_grp_label
+                        );
+                    }
                     frm.page.set_inner_btn_group_as_primary(btn_grp_label);
 		        }
             }
