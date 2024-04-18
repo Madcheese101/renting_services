@@ -60,7 +60,7 @@ renting_services.common = {
                     frm.add_custom_button(
                         this.doctypes_defaults[frm.doctype].finish,
                         () => frappe.call({doc: doc,
-                            method: "finish_cleaning", 
+                            method: this.doctypes_defaults[frm.doctype].finish_method, 
                             callback: function(r){
                                 frm.reload_doc();
                                 refresh_field("items");
