@@ -24,8 +24,19 @@ class Repair(Document):
 		
 		# TO-DO edit cleaning doc after cancel
 		if self.cleaning_id:
-			pass
-	
+			for item in self.get("items"):
+				cleaning_item = frappe.get_doc("Process Items", {"item_code":item.item_code, "parent":self.cleaning_id})
+				new_cleaning_qty = cleaning_item.ready_qty - item.qty
+				cleaning_item.ready_qty = new_cleaning_qty
+				cleaning_item.flags.ignore_validate_update_after_submit = True
+				cleaning_item.save(ignore_permissions=True)
+			
+			cleaning_doc = frappe.get_doc("Cleaning", self.cleaning_id)
+			cleaning_doc.status = 'قيد التنظيف'
+			cleaning_doc.total_ready = cleaning_doc.total_ready - self.total_qty
+			cleaning_doc.flags.ignore_validate_update_after_submit = True
+			cleaning_doc.save(ignore_permissions=True)
+
 	@frappe.whitelist()
 	def assign_to(self, user):
 		_user = user or frappe.session.user
