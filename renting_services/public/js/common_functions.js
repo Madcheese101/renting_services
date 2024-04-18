@@ -28,7 +28,6 @@ renting_services.common = {
                     next_step_doc: ""},
             }
             refresh(doc){
-
                 const frm = this.frm;
                 const btn_grp_label = this.doctypes_defaults[frm.doctype].btn_grp_label;
                 if (doc.docstatus == 1) {
@@ -59,12 +58,7 @@ renting_services.common = {
                     
                     frm.add_custom_button(
                         this.doctypes_defaults[frm.doctype].finish,
-                        () => frappe.call({doc: doc,
-                            method: this.doctypes_defaults[frm.doctype].finish_method, 
-                            callback: function(r){
-                                frm.reload_doc();
-                                refresh_field("items");
-                        }}),
+                        () => this.add_notes(doc),
                         btn_grp_label
                     );
                     frm.page.set_inner_btn_group_as_primary(btn_grp_label);
@@ -195,7 +189,67 @@ renting_services.common = {
                 d.show();
             
             }
-
+            add_notes(doc){
+                const me = this;
+                let data = doc.items.map((d) => {
+                    return {
+                        "item_name": d.item_name,
+                        "notes": ''
+                    }
+                });
+                const fields = [
+                    {
+                        fieldtype:'Data',
+                        // fieldname:"item_code",
+                        fieldname:"item_name",
+                        in_list_view: 1,
+                        read_only: 1,
+                        disabled: 0,
+                        label: __('الصنف'),
+                    },
+                    {
+                        fieldtype:'Text',
+                        fieldname:"notes",
+                        in_list_view: 1,
+                        label: __('ملاحظات'),
+                    }
+            
+                ];
+                let d = new frappe.ui.Dialog({
+                    title: 'الرجاء كتابة أي ملاحظات ان وجدت',
+                    fields: [
+                        {
+                            fieldname: "items_notes",
+                            fieldtype: "Table",
+                            label: "Items",
+                            cannot_add_rows: true,
+                            in_place_edit: false,
+                            // reqd: 1,
+                            data: data,
+                            get_data: () => {
+                                return data;
+                            },
+                            fields: fields
+                        },
+                    ],
+                    size: 'small', // small, large, extra-large 
+                    primary_action_label: 'موافق',
+                    primary_action(values) {
+                        const notes = values.items_notes
+                            .filter(i => i.notes)
+                            .map(i => `${i.item_name}:  ${i.notes}`);
+                        frappe.call({doc: doc,
+                            method: me.doctypes_defaults[me.frm.doctype].finish_method,
+                            args: {"new_notes": notes},
+                            callback: function(r){
+                                me.frm.reload_doc();
+                                refresh_field("items");
+                        }})
+                        d.hide();
+                    }
+                });
+                d.show();
+            }
             assign_to(){
                 const me = this;
                 
