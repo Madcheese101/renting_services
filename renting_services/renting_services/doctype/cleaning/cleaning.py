@@ -19,6 +19,15 @@ class Cleaning(Document):
 		self.db_set('employee', _user)
 		self.db_set('employee_name', full_name)
 
+		if _user != frappe.session.user:
+			from frappe.desk.form.assign_to import add
+			args = {
+				'assign_to' : [_user], 
+				'doctype' : 'Cleaning', 
+				'name' : self.name, 
+				'description' : 'تم تعيينك لتولي فاتورة تنظيف الأصناف التالية'}
+			add(args, ignore_permissions=True)
+	
 	def set_status(self):
 		if self.total_ready > 0 and self.total_ready != self.total_qty:
 			self.db_set('status', 'مكتمل جزئي')
