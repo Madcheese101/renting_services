@@ -156,6 +156,7 @@ scheduler_events = {
         # run at 12AM
         "0 0 * * *":[
             "renting_services.renting_services.tasks.tasks.draft_invoice_check",
+            "renting_services.renting_services.tasks.tasks.cancel_unconfirmed_rents"
         ]
 	}
 }
