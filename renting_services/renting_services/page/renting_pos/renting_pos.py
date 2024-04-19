@@ -61,7 +61,7 @@ def get_past_order_list(search_term, limit=50):
 def deliver_items(sales_invoice_doc, guarantee_type):
     invoice_doc = json.loads(sales_invoice_doc)
     warehouse = frappe.db.get_value('POS Profile', invoice_doc["pos_profile"], 'warehouse')
-    target_wh = "مخزن محل السياحية مواد - BC"
+    target_wh = frappe.db.get_value('Warehouse', warehouse, 'reserve_warehouse')
     
     
     
