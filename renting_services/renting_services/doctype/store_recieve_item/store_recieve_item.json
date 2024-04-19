@@ -19,7 +19,7 @@
   "ready_date",
   "section_break_r2cv2",
   "items",
-  "status",
+  "doc_status",
   "total_qty",
   "total_ready",
   "notes",
@@ -97,13 +97,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "\u0627\u0644\u062d\u0627\u0644\u0629",
-   "options": "\u0625\u0646\u062a\u0638\u0627\u0631\n\u0642\u064a\u062f \u0627\u0644\u0635\u064a\u0627\u0646\u0629\n\u0645\u0643\u062a\u0645\u0644\n\u0645\u0643\u062a\u0645\u0644 \u062c\u0632\u0626\u064a",
-   "read_only": 1
-  },
-  {
    "fieldname": "total_qty",
    "fieldtype": "Int",
    "label": "\u0627\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0643\u0645\u064a\u0629",
@@ -137,12 +130,21 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "doc_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "\u0627\u0644\u062d\u0627\u0644\u0629",
+   "options": "\u0625\u0646\u062a\u0638\u0627\u0631\n\u0642\u064a\u062f \u0627\u0644\u0635\u064a\u0627\u0646\u0629\n\u0645\u0643\u062a\u0645\u0644\n\u0645\u0643\u062a\u0645\u0644 \u062c\u0632\u0626\u064a",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-04-19 03:11:56.513170",
+ "modified": "2024-04-19 15:13:31.311417",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Store Recieve Item",

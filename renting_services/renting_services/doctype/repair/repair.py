@@ -32,7 +32,7 @@ class Repair(Document):
 				cleaning_item.save(ignore_permissions=True)
 			
 			cleaning_doc = frappe.get_doc("Cleaning", self.cleaning_id)
-			cleaning_doc.status = 'قيد التنظيف'
+			cleaning_doc.doc_status = 'قيد التنظيف'
 			cleaning_doc.total_ready = cleaning_doc.total_ready - self.total_qty
 			cleaning_doc.flags.ignore_validate_update_after_submit = True
 			cleaning_doc.save(ignore_permissions=True)
@@ -56,13 +56,13 @@ class Repair(Document):
 			
 	def set_status(self):
 		if self.total_ready > 0 and self.total_ready != self.total_qty:
-			self.db_set('status', 'مكتمل جزئي')
+			self.db_set('doc_status', 'مكتمل جزئي')
 		
 		if self.total_ready == self.total_qty:
-			self.db_set('status', 'مكتمل')
+			self.db_set('doc_status', 'مكتمل')
 
 		if self.employee and self.total_ready == 0:
-			self.db_set('status', 'قيد الصيانة')
+			self.db_set('doc_status', 'قيد الصيانة')
 
 	@frappe.whitelist()
 	def finish_repair(self, new_notes=None):
@@ -81,7 +81,7 @@ class Repair(Document):
 		
 		self.reload()
 		self.total_ready = self.total_qty
-		self.status = "مكتمل"
+		self.doc_status = "مكتمل"
 
 		self.flags.ignore_validate_update_after_submit = True
 		self.save(ignore_permissions=True)

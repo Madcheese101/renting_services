@@ -42,13 +42,13 @@ class Cleaning(Document):
 
 	def set_status(self):
 		if self.total_ready > 0 and self.total_ready != self.total_qty:
-			self.db_set('status', 'مكتمل جزئي')
+			self.db_set('doc_status', 'مكتمل جزئي')
 		
 		if self.total_ready == self.total_qty:
-			self.db_set('status', 'مكتمل')
+			self.db_set('doc_status', 'مكتمل')
 
 		if self.employee and self.total_ready == 0:
-			self.db_set('status', 'قيد التنظيف')
+			self.db_set('doc_status', 'قيد التنظيف')
 	
 
 	@frappe.whitelist()
@@ -68,7 +68,7 @@ class Cleaning(Document):
 		
 		self.reload()
 		self.total_ready = self.total_qty
-		self.status = "مكتمل"
+		self.doc_status = "مكتمل"
 
 		self.flags.ignore_validate_update_after_submit = True
 		self.save(ignore_permissions=True)
