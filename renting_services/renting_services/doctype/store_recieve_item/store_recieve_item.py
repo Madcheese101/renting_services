@@ -28,7 +28,7 @@ class StoreRecieveItem(Document):
 				cleaning_item.save(ignore_permissions=True)
 			
 			parent_doc = frappe.get_doc(doctype, doc_name)
-			parent_doc.status = 'قيد التنظيف'
+			parent_doc.doc_status = 'قيد الصيانة' if doctype == "Repair" else 'قيد التنظيف'
 			parent_doc.total_ready = parent_doc.total_ready - self.total_qty
 			parent_doc.flags.ignore_validate_update_after_submit = True
 			parent_doc.save(ignore_permissions=True)
@@ -78,5 +78,5 @@ class StoreRecieveItem(Document):
 					frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'جاهز')
 
 			
-			self.db_set("status", "تم الإستلام")
+			self.db_set("doc_status", "تم الإستلام")
 			self.set_user()
