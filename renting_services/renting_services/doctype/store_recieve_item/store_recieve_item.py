@@ -15,9 +15,23 @@ class StoreRecieveItem(Document):
 		if self.invoice_id:
 			frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'صيانة')
 		
-		# TO-DO edit cleaning doc after cancel
-		if self.repair_id:
-			pass
+		# TO-DO edit  doc after cancel
+		doctype = "Repair" if self.repair_id else "Cleaning"
+		doc_name = self.repair_id if self.repair_id else self.cleaning_id
+
+		if doc_name:
+			for item in self.get("items"):
+				cleaning_item = frappe.get_doc("Process Items", {"item_code":item.item_code, "parent":doc_name})
+				new_cleaning_qty = cleaning_item.ready_qty - item.qty
+				cleaning_item.ready_qty = new_cleaning_qty
+				cleaning_item.flags.ignore_validate_update_after_submit = True
+				cleaning_item.save(ignore_permissions=True)
+			
+			parent_doc = frappe.get_doc(doctype, doc_name)
+			parent_doc.status = 'قيد التنظيف'
+			parent_doc.total_ready = parent_doc.total_ready - self.total_qty
+			parent_doc.flags.ignore_validate_update_after_submit = True
+			parent_doc.save(ignore_permissions=True)
 
 	def set_user(self):
 			_user = frappe.session.user
