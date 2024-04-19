@@ -241,12 +241,12 @@ fixtures = [
                     "Sales Invoice-custom_return_date",
                     "Sales Invoice-custom_delivery_date",
                     "Sales Invoice-custom_حالة_الحجز",
+                    "Sales Invoice-custom_guarantee_id",
+                    "Sales Invoice-custom_guarantee_type",
                     "Warehouse-custom_reserve_warehouse",
                     "POS Profile-custom_rent_allow_credit_sale",
                     "POS Profile-custom_allowed_rent_period",
-                    "Sales Invoice-custom_name__id",
-                    "Sales Invoice-custom_name__id",
-                    "POS Profile-custom_limit_cashiers"
+                    "POS Profile-custom_limit_cashiers",
                 ),
             ]
         ]
