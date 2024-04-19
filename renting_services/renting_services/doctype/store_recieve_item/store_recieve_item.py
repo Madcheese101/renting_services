@@ -56,7 +56,13 @@ class StoreRecieveItem(Document):
 			stock_entry.submit()
 
 			if self.invoice_id:
-				frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'جاهز')
+				invoice = frappe.get_doc("Sales Invoice", self.invoice_id)
+				if (invoice.outstanding_amount == 0 and 
+					invoice.total_qty == self.total_qty):
+					frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'مكتمل')
+				else:
+					frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'جاهز')
+
 			
 			self.db_set("status", "تم الإستلام")
 			self.set_user()
