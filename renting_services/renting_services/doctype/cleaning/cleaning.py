@@ -89,7 +89,7 @@ class Cleaning(Document):
 			else:
 				send_to_store = frappe.new_doc("Store Recieve Item")
 				send_to_store.invoice_id = self.invoice_id
-				send_to_store.repair_id = self.name
+				send_to_store.cleaning_id = self.name
 				send_to_store.total_qty = total_ready
 				send_to_store.set("items", repair_items)
 				send_to_store.notes = notes
