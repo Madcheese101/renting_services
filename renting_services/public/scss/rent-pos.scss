@@ -4,6 +4,13 @@
     padding-bottom: var(--padding-xs);
 }
 
+.point-of-sale-app > .items-selector > .filter-section-second-line {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    background-color: var(--fg-color);
+    align-items: center;
+}
+
 .point-of-sale-app > .items-selector > .filter-section > .occ-date-field {
     grid-column: span 5 / span 5;
     display: flex;
@@ -15,6 +22,15 @@
     display: none;
     align-items: center;
     margin: 0px var(--margin-sm);
+}
+
+.point-of-sale-app > .items-selector > .filter-section-second-line > .no-rented-check {
+    grid-column: span 2 / span 2;
+    display: none;
+    align-items: center;
+    margin: 0px var(--margin-sm);
+    grid-column-start: 9 !important;
+    font-weight: 600;
 }
 
 .point-of-sale-app > .item-details-container > .calendar-container {

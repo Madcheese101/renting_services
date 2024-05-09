@@ -9,7 +9,11 @@ renting_services.PointOfRent.ItemSelector = class {
 		this.hide_images = settings.hide_images;
 		this.auto_add_item = settings.auto_add_item_to_cart;
 		this.occ_date_value = null;
+		this.before_date = null;
+		this.after_date = null;
+		this.occ_duration = null;
 		this.allowed_rent_period = settings.allowed_rent_period;
+		this.no_rented = 0;
 		this.inti_component();
 	}
 
@@ -29,6 +33,9 @@ renting_services.PointOfRent.ItemSelector = class {
 					<div class="search-field"></div>
 					<div class="occ-date-field"></div>
 					<div class="duration-field"></div>
+				</div>
+				<div class="filter-section-second-line">
+					<div class="no-rented-check"></div>
 				</div>
 				<div class="items-container"></div>
 			</section>`
@@ -56,14 +63,17 @@ renting_services.PointOfRent.ItemSelector = class {
 	get_items({start = 0, page_length = 40, search_term=''}) {
 		const doc = this.events.get_frm().doc;
 		const price_list = (doc && doc.selling_price_list) || this.price_list;
-		let { item_group, pos_profile } = this;
+		let { item_group, pos_profile, 
+			no_rented, before_date, after_date } = this;
 
 		!item_group && (item_group = this.parent_item_group);
 
 		return frappe.call({
-			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_items",
+			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_items",
 			freeze: true,
-			args: { start, page_length, price_list, item_group, search_term, pos_profile },
+			args: { start, page_length, price_list, 
+				item_group, search_term, pos_profile, no_rented,
+			before_date, after_date },
 		});
 	}
 
@@ -147,6 +157,7 @@ renting_services.PointOfRent.ItemSelector = class {
 		this.$component.find('.search-field').html('');
 		this.$component.find('.occ-date-field').html('');
 		this.$component.find('.duration-field').html('');
+		this.$component.find('.no-rented-check').html('');
 
 		this.search_field = frappe.ui.form.make_control({
 			df: {
@@ -157,22 +168,14 @@ renting_services.PointOfRent.ItemSelector = class {
 			parent: this.$component.find('.search-field'),
 			render_input: true,
 		});
-		this.item_group_field = frappe.ui.form.make_control({
+		this.occ_date_field = frappe.ui.form.make_control({
 			df: {
 				label: __('تاريخ المناسبة'),
 				fieldtype: 'Date',
 				placeholder: __('إختر تاريخ المناسبة'),
-				onchange: function() {
-					if(this.value !== me.occ_date_value){
-						me.set_dates(this.value);
-					}			
-					
-				},
 			},
 			parent: this.$component.find('.occ-date-field'),
 			render_input: true,
-			
-
 		});
 		this.duration_field = frappe.ui.form.make_control({
 			df: {
@@ -180,15 +183,30 @@ renting_services.PointOfRent.ItemSelector = class {
 				fieldtype: 'Select',
 				options: [1,2],
 				onchange: function() {
-					// me.occ_date = this.value;
+					me.occ_duration = this.value;
 					me.events.set_occ_duration(this.value)
+					if(me.no_rented==1){
+						me.filter_items();
+					}
 				},
 			},
 			parent: this.$component.find('.duration-field'),
 			render_input: true,
 		});
-		// this.search_field.toggle_label(false);
-		// this.item_group_field.toggle_label(true);
+		this.no_rented_check = frappe.ui.form.make_control({
+			df: {
+				label: __('عرض المتوفر فقط؟'),
+				fieldtype: 'Check',
+				onchange: function() {
+					if(this.value !== me.no_rented){
+						me.no_rented = this.value;
+						me.filter_items();
+					}			
+				},
+			},
+			parent: this.$component.find('.no-rented-check'),
+			render_input: true,
+		});
 		
 		this.duration_field.set_value(1);
 		this.attach_clear_btn();
@@ -198,6 +216,9 @@ renting_services.PointOfRent.ItemSelector = class {
 		if (!date){
 			this.events.set_occ_date(date);
 			this.occ_date_value = date;
+			this.before_date = date;
+			this.after_date = date;
+			this.toggle_dur_field(false);
 			this.toggle_items(date);
 			return;
 		}
@@ -215,15 +236,20 @@ renting_services.PointOfRent.ItemSelector = class {
 				frappe.utils.play_sound("error");
 
 			}else{
-
 				this.events.set_occ_date(date);
 				this.occ_date_value = date;
+				this.before_date = frappe.datetime.add_days(this.occ_date_value, -1);
+				this.after_date = frappe.datetime.add_days(
+					this.occ_date_value, this.occ_duration);
 				this.toggle_dur_field(true);
 				this.toggle_items(true);
 			}
 		}else{
 			this.events.set_occ_date(date);
 			this.occ_date_value = date;
+			this.before_date = frappe.datetime.add_days(this.occ_date_value, -1);
+			this.after_date = frappe.datetime.add_days(
+				this.occ_date_value, this.occ_duration);
 			this.toggle_dur_field(true);
 			this.toggle_items(true);
 		}
@@ -335,6 +361,21 @@ renting_services.PointOfRent.ItemSelector = class {
 				Boolean(this.search_field.$input.val())
 			);
 		});
+
+		this.occ_date_field.$input.on('change', (value) => {
+			let new_val = value.target.value
+			let correct_date = new_val.split('-').reverse().join('-');
+			if(correct_date == "" && correct_date !== me.occ_date_value){
+				this.no_rented_check.set_value(0);
+			}
+			if(correct_date !== me.occ_date_value){
+				me.set_dates(correct_date);
+				if(me.no_rented){
+					me.filter_items()
+				}
+			}
+			
+		});
 	}
 
 	attach_shortcuts() {
@@ -442,6 +483,14 @@ renting_services.PointOfRent.ItemSelector = class {
 		show ?
 			this.$component.find('.occ-date-field').css('grid-column', 'span 3 / span 3') :
 			this.$component.find('.occ-date-field').css('grid-column', 'span 5 / span 5');
+
+		// manage no-rented-check display
+		show ?
+			this.$component.find('.no-rented-check').css('display', 'flex') :
+			this.$component.find('.no-rented-check').css('display', 'none');
+		show ?
+			this.$component.find('.no-rented-check').css('grid-column', 'span 3 / span 3') :
+			this.$component.find('.no-rented-check').css('grid-column', 'span 5 / span 5');
 	}
 	toggle_items(show) {
 		this.$component.find('.items-container').css('display', show ? 'grid': 'none');

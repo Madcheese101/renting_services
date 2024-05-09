@@ -80,7 +80,7 @@ doctype_js = {"Payment Entry" : "public/js/payment_entry.js",
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-before_app_install = "renting_services.utils.utils.create_defaults"
+# before_app_install = "renting_services.utils.utils.create_defaults"
 # after_app_install = "renting_services.utils.after_app_install"
 
 # Integration Cleanup
