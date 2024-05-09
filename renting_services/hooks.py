@@ -276,7 +276,9 @@ fixtures = [
                     "Sales Invoice-section_break_40-depends_on", 
                     "Sales Invoice-taxes_section-depends_on", 
                     "Sales Invoice-currency_and_price_list-depends_on", 
-                    "Sales Invoice-accounting_dimensions_section-depends_on"
+                    "Sales Invoice-accounting_dimensions_section-depends_on",
+                    "Customer-customer_type-default",
+                    "Customer-customer_type-hidden"
                 ),
             ]
         ]
