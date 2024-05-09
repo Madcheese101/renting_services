@@ -711,10 +711,11 @@ renting_services.PointOfRent.Controller = class {
 	}
 
 	async save_and_checkout() {
-		const limit_cashiers = this.settings.limit_cashiers;
-		const is_cashier = frappe.user.has_role('كاشير');
-		const enable_pay = (is_cashier == true && limit_cashiers == true) || 
-					(limit_cashiers == false) ? 1 : 0;
+		// const limit_cashiers = this.settings.limit_cashiers;
+		// const is_cashier = frappe.user.has_role('كاشير');
+		// const enable_pay = (is_cashier == true && limit_cashiers == true) || 
+		// 			(limit_cashiers == false) ? 1 : 0;
+		const enable_pay = 0;
 		this.frm.set_value("is_pos", enable_pay);
 
 		if (this.frm.is_dirty()) {
