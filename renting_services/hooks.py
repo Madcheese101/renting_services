@@ -32,7 +32,8 @@ app_include_js = "renting_services.bundle.js"
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 doctype_js = {"Payment Entry" : "public/js/payment_entry.js",
-              "Sales Invoice" : "public/js/rent_invoice.js"}
+              "Sales Invoice" : "public/js/rent_invoice.js",
+              "Branch" : "public/js/branch.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -123,13 +124,16 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-#	"*": {
-#		"on_update": "method",
-#		"on_cancel": "method",
-#		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	# "*": {
+	# 	"on_update": "method",
+	# 	"on_cancel": "method",
+	# 	"on_trash": "method"
+	# }
+    # "Sales Invoice": {
+	# 	"on_submit": "renting_services.doc_events.sales_invoice.proccess_change_rent"
+	# }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -243,10 +247,18 @@ fixtures = [
                     "Sales Invoice-custom_حالة_الحجز",
                     "Sales Invoice-custom_guarantee_id",
                     "Sales Invoice-custom_guarantee_type",
+                    "Sales Invoice-custom_change_invoice",
+                    "Sales Invoice-custom_original_invoice",
                     "Warehouse-custom_reserve_warehouse",
                     "POS Profile-custom_rent_allow_credit_sale",
                     "POS Profile-custom_allowed_rent_period",
                     "POS Profile-custom_limit_cashiers",
+                    "POS Profile-custom_limit_payment_refund",
+                    "POS Profile-custom_allow_full_return_in_days",
+                    "Branch-letter_head",
+                    "Branch-warehouse",
+                    "Branch-custom_printers",
+                    "Branch-custom_default_printer"
                 ),
             ]
         ]

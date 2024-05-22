@@ -1,4 +1,5 @@
 frappe.provide("erpnext.accounts");
+frappe.provide("renting_services");
 
 erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erpnext.accounts.SalesInvoiceController  {
 	make_mapped_rent_payment_entry(args) {
@@ -116,6 +117,20 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 		const me = this;
 		super.refresh(doc,dt, dn);
 		
+		this.frm.add_custom_button(
+			__('طباعة الفاتورة'),
+			// () => this.make_rent_payment_entry(),
+			() => this.print_invoice(),
+			__('طباعة')
+		);
+
+		this.frm.add_custom_button(
+			__('طباعة الطابع'),
+			// () => this.make_rent_payment_entry(),
+			() => this.print_guarantee(),
+			__('طباعة')
+		);
+
 		if (doc.docstatus == 1 && doc.outstanding_amount!=0
 			&& !(cint(doc.is_return) && doc.return_against)) {
 				
@@ -138,6 +153,14 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 			);
 			this.frm.page.set_inner_btn_group_as_primary(__('اجراءات الإيجار'));
 		}
+	}
+
+	print_invoice(){
+		renting_services.print_directly(this.frm.doctype, this.frm.doc.name, "Rent Invoice");
+	}
+
+	print_guarantee(){
+		renting_services.print_directly(this.frm.doctype, this.frm.doc.name, "guarantee", 1);
 	}
 }
 // for backward compatibility: combine new and previous states

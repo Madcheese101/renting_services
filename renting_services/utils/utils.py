@@ -17,6 +17,9 @@ from frappe.utils import (
 	parse_json,
 	today,
 )
+from frappe.www.printview import validate_print_permission
+from frappe.translate import print_language
+from frappe.utils.pdf import prepare_options
 
 @frappe.whitelist()
 def update_child_ready_qty(parent_doctype, trans_items, 
@@ -97,4 +100,50 @@ def create_stock_entry_type():
         cleaning.save(ignore_permissions=True)
 
     frappe.db.commit()
+
+@frappe.whitelist()
+def get_print_as_pdf(doctype, name, format=None, doc=None, 
+                  no_letterhead=0, language=None, letterhead=None):
+    pdf_file = None
+    doc = doc or frappe.get_doc(doctype, name)
+
+    user_branch = frappe.get_value("Employee", {"user_id": frappe.session.user}, ["branch"]) or None
+
+    if not user_branch:
+        frappe.throw("فرع المحل غير محدد للموظف")
+    
+    
+    letterhead_, default_printer = frappe.get_value("Branch", user_branch, ["letter_head","default_printer"])
+    
+    printing_settings = frappe.get_all("Branch Printers", 
+                                      filters={"print_doctype": doctype,
+                                               "print_format": format,
+                                               "parent": user_branch},
+                                        fields=["printer", "page_width", "page_height"],
+                                        limit=1)
+    if printing_settings:
+        printer = printing_settings[0]
+        if printer["page_width"] == 0:
+            printer["page_width"] == None
+        if printer["page_height"] == 0:
+            printer["page_height"] == None
+
+    elif default_printer:
+        printer = {"printer": default_printer, "page_width":None, "page_height":None}
+    else:
+        frappe.throw(f"لم يتم تحديد الطابعة الإفتراضية للمحل أو تحديد الطابعة لقالب الطباعة : {format}")
+    
+
+    if not letterhead and (no_letterhead == 0):
+        letterhead = letterhead_ or None
+        
+        
+    validate_print_permission(doc)
+    with print_language(language):
+        pdf_file = frappe.get_print(
+            doctype, name, format, doc=doc,
+            letterhead=letterhead, no_letterhead=no_letterhead,
+            as_pdf=True, 
+        )
+    return pdf_file, printer
 

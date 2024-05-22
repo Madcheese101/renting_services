@@ -38,7 +38,7 @@ def check_availability(before_date, after_date, item_code):
     return result
 
 @frappe.whitelist()
-def get_available_products(pos_profile, before_date="2024-4-15", after_date="2024-4-18"):
+def get_available_products(pos_profile, before_date, after_date):
     items_doc = DocType("Sales Invoice Item")
     sales_doc = DocType("Sales Invoice")
     result = (
@@ -56,7 +56,12 @@ def get_available_products(pos_profile, before_date="2024-4-15", after_date="202
 
 @frappe.whitelist()
 def get_past_order_list(search_term, limit=50):
-    fields = ["name", "grand_total", "currency", "customer", "posting_time", "posting_date"]
+    fields = ["name", 
+              "grand_total", 
+              "currency", 
+              "customer", 
+              "posting_time", 
+              "posting_date"]
     
     customer_filters = {"customer": ["like", "%{}%".format(search_term)]}
     name_filters = {"name": ["like", "%{}%".format(search_term)]}
@@ -113,6 +118,7 @@ def deliver_items(sales_invoice_doc, guarantee_type):
     guarantee_id = (get_fullname() if 
         guarantee_type == "موظف" else invoice_doc["name"])
     frappe.db.set_value("Sales Invoice", invoice_doc["name"], "guarantee_id", guarantee_id)
+    frappe.db.commit()
 
 @frappe.whitelist()
 def return_and_clean(sales_invoice_doc, notes):
@@ -121,10 +127,117 @@ def return_and_clean(sales_invoice_doc, notes):
     doc.run_method("recieve_and_clean", notes=notes)
 
 @frappe.whitelist()
-def make_sales_return(source_name, target_doc=None):
-	from erpnext.controllers.sales_and_purchase_return import make_return_doc
+def make_sales_return(payments, source_name, target_doc=None):
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+    from renting_services.overrides.rent_invoice import get_payment_entry
 
-	return make_return_doc("Sales Invoice", source_name, target_doc)
+    payments_ = json.loads(payments)
+    return_invoice = make_return_doc("Sales Invoice", source_name, target_doc)
+    return_invoice.is_pos = 0
+    return_invoice.update_stock = 0
+    return_invoice.update_outstanding_for_self = 0
+    return_invoice.save()
+    return_invoice.submit()
+    frappe.db.set_value("Sales Invoice", source_name, "rent_status", "مرتجع")
+    frappe.db.commit()
+    
+    for payment in payments_:
+        reference_no = ""
+        if (payment["type"] == "Bank"):
+            reference_no = f'{return_invoice.name} - {frappe.datetime.nowdate()}'
+        payment_entry = get_payment_entry(dt= return_invoice.doctype, 
+                                          dn=return_invoice.name,
+                                          party_type="Customer",
+                                          mode_of_payment=payment["mode_of_payment"],
+                                          bank_account=payment["account"],
+                                          bank_amount=payment["bank_amount"],
+                                          reference_no=reference_no
+                                        )
+        payment_doc = frappe.get_doc(payment_entry)
+        payment_doc.set_amounts()
+        payment_doc.flags.ignore_permissions=True
+        payment_doc.references = []
+        payment_doc.save()
+        payment_doc.title += " (إرجاع للزبون)"
+        payment_doc.save()
+        payment_doc.submit()
+
+    return return_invoice
+
+@frappe.whitelist()
+def return_as_points(source_name, target_doc=None):
+    # do unlink payments
+    from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import get_linked_payments_for_doc
+    from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import create_unreconcile_doc_for_selection
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+    
+    sales_doc = frappe.get_doc("Sales Invoice", source_name)
+    linked_payments = get_linked_payments_for_doc(company=sales_doc.company, 
+                                                  doctype=sales_doc.doctype,
+                                                  docname=source_name)
+    selection_map = []
+    for payment in linked_payments:
+        if payment.voucher_type == "Payment Entry":
+            selection_map.append({
+                'company': payment.company,
+                'voucher_type': payment.voucher_type,
+                'voucher_no': payment.voucher_no,
+                'against_voucher_type': sales_doc.doctype,
+                'against_voucher_no': sales_doc.name
+            })
+
+    return_invoice = make_return_doc("Sales Invoice", source_name, target_doc)
+    return_invoice.is_pos = 0
+    return_invoice.update_stock = 0
+    return_invoice.update_outstanding_for_self = 0
+    return_invoice.save()
+    return_invoice.submit()
+
+    if len(selection_map) > 0:
+        create_unreconcile_doc_for_selection(selections=json.dumps(selection_map))
+    frappe.db.set_value("Sales Invoice", source_name, "rent_status", "رصيد")
+    frappe.db.commit()
+
+@frappe.whitelist()
+def unlink_payments(invoice_name, company, doctype):
+    from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import get_linked_payments_for_doc
+    from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import create_unreconcile_doc_for_selection
+
+    linked_payments = get_linked_payments_for_doc(company=company, 
+                                                  doctype=doctype,
+                                                  docname=invoice_name)
+    selection_map = []
+    for payment in linked_payments:
+        if payment.voucher_type == "Payment Entry":
+            selection_map.append({
+                'company': payment.company,
+                'voucher_type': payment.voucher_type,
+                'voucher_no': payment.voucher_no,
+                'against_voucher_type': doctype,
+                'against_voucher_no': invoice_name
+            })
+    if len(selection_map) > 0:
+        create_unreconcile_doc_for_selection(selections=json.dumps(selection_map))
+
+    
+@frappe.whitelist()
+def change_rent(new_inv_id, source_name, target_doc=None):
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+    return_invoice = make_return_doc("Sales Invoice", source_name, target_doc)
+    return_invoice.change_invoice = new_inv_id
+    return_invoice.rent_status = "استبدال"
+    return_invoice.is_pos = 0
+    return_invoice.update_stock = 0
+    return_invoice.update_outstanding_for_self = 0
+    return_invoice.save()
+    return_invoice.submit()
+
+    frappe.db.set_value("Sales Invoice", source_name, "rent_status", "استبدال")
+    frappe.db.set_value("Sales Invoice", source_name, "change_invoice", new_inv_id)
+    frappe.db.commit()
+
+    # TO-DO: unlink payments from old
+    # then link to new invoice
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, 

@@ -6,6 +6,7 @@ from frappe.contacts.doctype.address.address import get_address_display
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from frappe.utils import add_days, cint, cstr, flt, formatdate, get_link_to_form, getdate, nowdate
+from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
 from erpnext.accounts.doctype.bank_account.bank_account import (
 	get_bank_account_details,
@@ -25,6 +26,12 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import (
     split_early_payment_discount_loss,
     set_pending_discount_loss,
 	get_reference_as_per_payment_terms
+)
+from erpnext.accounts.party import (
+	get_party_account,
+	get_party_account_currency,
+	get_party_gle_currency,
+	validate_party_frozen_disabled,
 )
 class RentInvoice(SalesInvoice):    
     
@@ -90,7 +97,66 @@ class RentInvoice(SalesInvoice):
 			pos_profile = frappe.get_cached_doc("POS Profile", self.pos_profile)
 			update_multi_mode_option(self, pos_profile)
 			self.paid_amount = 0
-			
+	
+	@frappe.whitelist()
+	def unlink_payments(self):
+		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import get_linked_payments_for_doc
+		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import create_unreconcile_doc_for_selection
+
+		linked_payments = get_linked_payments_for_doc(company=self.company, 
+													doctype=self.doctype,
+													docname=self.original_invoice)
+		selection_map = []
+		for payment in linked_payments:
+			if payment.voucher_type == "Payment Entry":
+				selection_map.append({
+					'company': payment.company,
+					'voucher_type': payment.voucher_type,
+					'voucher_no': payment.voucher_no,
+					'against_voucher_type': self.doctype,
+					'against_voucher_no': self.original_invoice
+				})
+		if len(selection_map) > 0:
+			create_unreconcile_doc_for_selection(selections=json.dumps(selection_map))
+	
+	@frappe.whitelist()
+	def change_rent(self, payments):
+		if self.original_invoice:
+			return_invoice = make_return_doc("Sales Invoice", self.original_invoice, None)
+			return_invoice.change_invoice = self.name
+			return_invoice.rent_status = "استبدال"
+			return_invoice.is_pos = 0
+			return_invoice.update_stock = 0
+			return_invoice.update_outstanding_for_self = 0
+			return_invoice.save()
+			return_invoice.submit()
+
+			frappe.db.set_value("Sales Invoice", self.original_invoice, "rent_status", "استبدال")
+			frappe.db.set_value("Sales Invoice", self.original_invoice, "change_invoice", self.name)
+			frappe.db.commit()
+
+			for payment in payments:
+				reference_no = ""
+				if (payment["type"] == "Bank"):
+					reference_no = f'{return_invoice.name} - {frappe.datetime.nowdate()}'
+				payment_entry = get_payment_entry(dt= return_invoice.doctype, 
+												dn=return_invoice.name,
+												party_type="Customer",
+												mode_of_payment=payment["mode_of_payment"],
+												bank_account=payment["account"],
+												bank_amount=payment["bank_amount"],
+												reference_no=reference_no,
+												payment_type="Pay"
+												)
+				payment_doc = frappe.get_doc(payment_entry)
+				payment_doc.set_amounts()
+				payment_doc.flags.ignore_permissions=True
+				payment_doc.references = []
+				payment_doc.save()
+				payment_doc.title += " (إرجاع للزبون)"
+				payment_doc.save()
+				payment_doc.submit()
+
 @frappe.whitelist()
 def get_payment_entry(
 	dt,
@@ -101,7 +167,8 @@ def get_payment_entry(
 	party_type=None,
 	payment_type=None,
 	reference_date=None,
-	reference_no=None
+	reference_no=None,
+	mode_of_payment=None
 ):
 	# eval:(doc.paid_from_account_type == 'Bank' || doc.paid_to_account_type == 'Bank')
 	doc = frappe.get_doc(dt, dn)
@@ -145,6 +212,7 @@ def get_payment_entry(
 
 	pe = frappe.new_doc("Payment Entry")
 	pe.payment_type = payment_type
+	pe.mode_of_payment = mode_of_payment
 	pe.company = doc.company
 	pe.cost_center = doc.get("cost_center")
 	pe.posting_date = nowdate()

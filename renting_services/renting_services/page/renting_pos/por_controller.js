@@ -2,7 +2,7 @@ renting_services.PointOfRent.Controller = class {
 	constructor(wrapper) {
 		this.wrapper = $(wrapper).find('.layout-main-section');
 		this.page = wrapper.page;
-
+		this.items_list = [];
         this.init_por();
 	}
     
@@ -47,7 +47,12 @@ renting_services.PointOfRent.Controller = class {
 		this.wrapper.append(
 			`<div class="point-of-sale-app"></div>`
 		);
+		this.$title_comp = this.page.$title_area;
 
+		this.$title_comp.append(`<div class="is-change-inv">
+		<span class="indicator-pill no-indicator-dot whitespace-nowrap red">${__('فاتورة إستبدال')}</span>
+		</div>`);
+		this.is_change_pill = this.$title_comp.find('.is-change-inv')
 		this.$components_wrapper = this.wrapper.find('.point-of-sale-app');
 	}
 
@@ -86,11 +91,7 @@ renting_services.PointOfRent.Controller = class {
 
 	}
 	new_invoice(){
-		frappe.run_serially([
-			() => frappe.dom.freeze(),
-			() => this.make_new_invoice(),
-			() => frappe.dom.unfreeze(),
-		]);
+		this.make_new_invoice();
 	}
 	save_draft_invoice() {
 		if (!this.$components_wrapper.is(":visible")) return;
@@ -128,8 +129,7 @@ renting_services.PointOfRent.Controller = class {
 				// item_selected: args => this.on_cart_update(args),
                 item_selected: args => this.item_details.toggle_item_details_section(args),
 				set_occ_date: date => {
-					this.frm.set_value('delivery_date', date);
-					this.item_details.occ_date = date
+					this.item_details.occ_date = date;
 				},
 				set_occ_duration: dur => {
 					if(this.item_details.occ_date){
@@ -298,7 +298,7 @@ renting_services.PointOfRent.Controller = class {
 	init_order_summary() {
 		this.order_summary = new renting_services.PointOfRent.PastOrderSummary({
 			wrapper: this.$components_wrapper,
-			limit_cashiers: this.settings.limit_cashiers,
+			settings: this.settings,
 			events: {
 				get_frm: () => this.frm,
 
@@ -335,9 +335,40 @@ renting_services.PointOfRent.Controller = class {
 						() => this.item_selector.resize_selector({minimize:false, doctype: null}),
 						() => frappe.dom.unfreeze(),
 					]);
+				},
+				change_order: (original_inv, occ_date, occ_duration, items, customer) => {
+					frappe.run_serially([
+						() => frappe.dom.freeze(),
+						() => this.make_new_invoice(),
+						() => {
+							this.items_list = items.map(item => item.item_code) || [];
+							this.frm.doc.original_invoice = original_inv;
+							this.frm.doc.customer = customer;
+							this.frm.set_value('items', items);
+
+
+							this.cart.customer_field.set_value(customer);
+							this.item_selector.occ_date_field.set_value(occ_date);
+							this.item_selector.duration_field.set_value(occ_duration);
+							this.item_details.items = this.items_list;
+							
+							this.item_selector.duration_field.df.read_only = true;
+							this.item_selector.occ_date_field.df.read_only = true;
+							this.item_selector.duration_field.refresh();
+							this.item_selector.occ_date_field.refresh();
+							this.toggle_is_change_pill(true);
+						},
+						// () => this.item_selector.toggle_component(true),
+						() => this.toggle_recent_order_list(false),
+						() => this.item_selector.resize_selector({minimize:false, doctype: null}),
+						() => frappe.dom.unfreeze(),
+					]);
 				}
 			}
 		})
+	}
+	toggle_is_change_pill(show) {
+		this.is_change_pill.css('display', show ? 'flex': 'none');
 	}
 
 	toggle_recent_order_list(show) {
@@ -364,20 +395,114 @@ renting_services.PointOfRent.Controller = class {
 		!show ? (this.item_details.toggle_component(false) || this.payment.toggle_component(false)) : '';
 	}
 
-	async submit_invoice(){
-		this.frm.doc.paid_amount == 0 ? 
-			this.frm.set_value('rent_status', "غير مؤكد") : this.frm.set_value('rent_status', "محجوز");
-		this.frm.doc.update_stock = 0;
-		var rent_exists = await this.check_availability();
-
-		if (rent_exists.message.length > 0){
-			const items = rent_exists.message.map(item=> item.item_name);
-			frappe.throw( `يوجد حجز في الأصناف الأتية <br> ${items}`);
-			return;
+	async validate_and_unlink_payments(){
+		if(!this.frm.doc.original_invoice){
+			var rent_exists = await this.check_availability();
+			if (rent_exists.message.length > 0){
+				const items = rent_exists.message.map(item=> item.item_name);
+				frappe.throw( `يوجد حجز في الأصناف الأتية <br> ${items}`);
+			}
 		}
-		
+		else{
+			await this.frm.call('unlink_payments');
+		}
+	}
+	async get_advances_and_submit(){
+		var advances_totals = 0;
+		await this.frm.call({
+			method: "set_advances",
+			doc: this.frm.doc,
+			callback: function(r, rt) {
+				refresh_field("advances")
+			}
+		});
+		if(this.frm.doc.advances.length > 0){
+			this.frm.doc.rent_status = "محجوز";
+			this.frm.dirty();
+		}
+		this.frm.doc.advances.forEach(payment=>{
+			advances_totals += payment.advance_amount;
+		});
+		var amount_to_return = advances_totals - this.frm.doc.grand_total;
+
+		// if there is left over of payment advances
+		// show pay to customer dialog
+		if(amount_to_return > 0){
+			const me = this;
+			const mode_of_payments = await frappe.call({
+				doc: me.frm.doc,
+				method: "get_mode_of_payments"
+			});
+			if(mode_of_payments.message && mode_of_payments.message != "nothing"){
+				var payments = mode_of_payments.message;
+				const positive_amount_to_return = Math.abs(amount_to_return);
+				const fields = [
+					{
+						label: 'Payment Details',
+						fieldname: 'payments',
+						fieldtype: 'Table',
+						cannot_add_rows: false,
+						in_place_edit: true,
+						data: payments,
+						fields: [
+							{ fieldname: 'mode_of_payment', 
+								fieldtype: 'Data', label: 'Payment Mode', in_list_view: 1},
+							{ fieldname: 'account', 
+								fieldtype: 'Data', label: 'Account'},
+							{ fieldname: 'type',
+								fieldtype: 'Data', label: 'Type'},
+							{ fieldname: 'base_amount', 
+								fieldtype: 'Currency', label: 'Amount', in_list_view: 1 }
+						]
+					}
+				]
+				var payments_dialog = new frappe.ui.Dialog({
+					title: `الرجاء إدخال قيمة الراجع للزبون: ${positive_amount_to_return} دينار`,
+					fields: fields,
+					size: 'small', // small, large, extra-large 
+					primary_action_label: 'إرجاع',
+					async primary_action(values) {
+						var payments_ = values.payments;
+						var final_payments = [];
+						// get the total of payments values
+						var sum = payments.reduce((acc, curr) => acc + curr.base_amount, 0);
+						// check if payment totals equals amount to return
+						if (sum != positive_amount_to_return){
+							d.hide();
+							frappe.throw(__(`اجمالي قيمة الراجع يجب ان يساوي ${positive_amount_to_return}`));
+						}
+						frappe.dom.freeze();
+						// get payments with values
+						for (const p of payments){
+							if(p.base_amount > 0){
+								final_payments.push({"mode_of_payment":p.mode_of_payment,
+									"account":p.account,
+									"bank_amount":p.base_amount,
+									"type":p.type})
+							}
+						}
+						me.submit_inv(final_payments);
+						payments_dialog.hide();
+						frappe.dom.unfreeze();
+					}
+				});
+				payments_dialog.show();
+			}
+		}else{
+			this.submit_inv(null);
+		}
+	}
+	submit_inv(payments){
 		this.frm.savesubmit()
-			.then((r) => {
+			.then(async (r) => {
+				console.log(payments);
+				if(payments){
+					await this.frm.call({
+								method: "change_rent",
+								doc: this.frm.doc,
+								args: {"payments": payments}
+							});
+				}
 				this.toggle_components(false);
 				this.order_summary.toggle_component(true);
 				this.order_summary.load_summary_of(this.frm.doc, true);
@@ -385,13 +510,25 @@ renting_services.PointOfRent.Controller = class {
 					indicator: 'green',
 					message: __('POS invoice {0} created succesfully', [r.doc.name])
 				});
-			});
-
+		});
+	}
+	async submit_invoice(){
+		this.frm.doc.paid_amount == 0 ? 
+			this.frm.set_value('rent_status', "غير مؤكد") : this.frm.set_value('rent_status', "محجوز");
+		this.frm.doc.update_stock = 0;
+		this.frm.doc.delivery_date = this.item_selector.occ_date_value;
+		this.frm.doc.return_date = frappe.datetime.add_days(this.item_selector.occ_date_value, 
+				this.item_selector.occ_duration);
+		this.validate_and_unlink_payments();
+		this.get_advances_and_submit();
 	}
 	async check_availability(){
-		let expected_after = frappe.datetime.add_days(this.frm.doc.delivery_date, this.frm.doc.return_date);
-		let expected_before = frappe.datetime.add_days(this.frm.doc.delivery_date, -1);
-		var items = this.frm.doc.items.map(item => item.item_code);
+		var expected_after = this.item_selector.after_date;
+		var expected_before = this.item_selector.before_date;
+		var items = this.frm.doc.items
+			.filter(item => !this.items_list.includes(item.item_code))
+			.map(item => item.item_code);
+
 		return frappe.call({
 			method: "renting_services.renting_services.page.renting_pos.renting_pos.check_availability",
 			args: { "before_date": expected_before,
@@ -407,6 +544,15 @@ renting_services.PointOfRent.Controller = class {
 			() => this.set_pos_profile_data(),
 			() => this.set_pos_profile_status(),
 			() => this.cart.load_invoice(),
+			() => {
+				this.item_selector.duration_field.df.read_only = false;
+				this.item_selector.occ_date_field.df.read_only = false;
+				this.item_selector.duration_field.refresh();
+				this.item_selector.occ_date_field.refresh();
+				this.item_details.items = [];
+				this.items_list = [];
+				this.toggle_is_change_pill(false);
+			},
 			() => frappe.dom.unfreeze(),
 		]);
 	}

@@ -1,8 +1,12 @@
+frappe.provide("renting_services");
+
 renting_services.PointOfRent.PastOrderSummary = class {
-	constructor({ wrapper, limit_cashiers, events }) {
+	constructor({ wrapper, settings, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
-		this.limit_cashiers = limit_cashiers;
+		this.limit_cashiers = settings.limit_cashiers;
+		this.limit_payment_refund = settings.limit_payment_refund;
+		this.allow_full_return_in_days = settings.allow_full_return_in_days;
 		this.init_component();
 	}
 
@@ -175,24 +179,18 @@ renting_services.PointOfRent.PastOrderSummary = class {
 	}
 
 	bind_events() {
-		this.$summary_container.on('click', '.return-btn', () => {
-			this.events.process_return(this.doc.name);
-			this.toggle_component(false);
-			this.$component.find('.no-summary-placeholder').css('display', 'flex');
-			this.$summary_wrapper.css('display', 'none');
-		});
+		// this.$summary_container.on('click', '.return-btn', () => {
+			// this.events.process_return(this.doc.name);
+			// this.toggle_component(false);
+			// this.$component.find('.no-summary-placeholder').css('display', 'flex');
+			// this.$summary_wrapper.css('display', 'none');
 
-		this.$summary_container.on('click', '.edit-btn', () => {
-			this.events.edit_order(this.doc.name);
-			this.toggle_component(false);
-			this.$component.find('.no-summary-placeholder').css('display', 'flex');
-			this.$summary_wrapper.css('display', 'none');
-		});
+		// });
 
-		this.$summary_container.on('click', '.delete-btn', () => {
-			this.events.delete_order(this.doc.name);
-			this.show_summary_placeholder();
-		});
+		// this.$summary_container.on('click', '.delete-btn', () => {
+		// 	this.events.delete_order(this.doc.name);
+		// 	this.show_summary_placeholder();
+		// });
 
 		// this.$summary_container.on('click', '.delete-btn', () => {
 		// 	this.events.delete_order(this.doc.name);
@@ -202,6 +200,18 @@ renting_services.PointOfRent.PastOrderSummary = class {
 		// 	// this.$summary_wrapper.addClass('d-none');
 		// });
 
+		// this.$summary_container.on('click', '.email-btn', () => {
+		// 	this.email_dialog.fields_dict.email_id.set_value(this.customer_email);
+		// 	this.email_dialog.show();
+		// });
+
+		this.$summary_container.on('click', '.edit-btn', () => {
+			this.events.edit_order(this.doc.name);
+			this.toggle_component(false);
+			this.$component.find('.no-summary-placeholder').css('display', 'flex');
+			this.$summary_wrapper.css('display', 'none');
+		});
+
 		this.$summary_container.on('click', '.new-btn', () => {
 			this.events.new_order();
 			this.toggle_component(false);
@@ -209,18 +219,19 @@ renting_services.PointOfRent.PastOrderSummary = class {
 			this.$summary_wrapper.css('display', 'none');
 		});
 
-		this.$summary_container.on('click', '.email-btn', () => {
-			this.email_dialog.fields_dict.email_id.set_value(this.customer_email);
-			this.email_dialog.show();
+		this.$summary_container.on('click', '.print-btn', () => {
+			// this.print_receipt();
+			renting_services.print_directly(this.doc.doctype, this.doc.name, "Rent Invoice");
 		});
 
-		this.$summary_container.on('click', '.print-btn', () => {
-			this.print_receipt();
+		this.$summary_container.on('click', '.print-sticker-btn', () => {
+			renting_services.print_directly(this.doc.doctype, this.doc.name, "guarantee");
 		});
 
 		this.$summary_container.on('click', '.confirm-rent-btn', () => {
 			this.show_dialog();
 		});
+
 		this.$summary_container.on('click', '.deliver-btn', () => {
 			this.deliver_dialog();
 		});
@@ -234,18 +245,128 @@ renting_services.PointOfRent.PastOrderSummary = class {
 		});
 
 		this.$summary_container.on('click', '.return-points-btn', () => {
-			// TODO: 
-			// do one of the following:
-			// 1. return invoice and add money to customer account
-			// 2. cancel invoice and add money to customer account
-			// 3. clear customer debt and add balance to his account/or Loyalty Points
-			
-			// the second option might not be possible due to
-			// possible link to payment entry
+			const me = this;
+			frappe.confirm(`هل أنت متأكد من الإستمرار في إرجاع الفاتورة رقم </br>
+				${this.doc.name}
+				</br>
+				كرصيد للزبون؟`,
+
+				() => {
+					// action to perform if Yes is selected
+					frappe.call({
+						method: "renting_services.renting_services.page.renting_pos.renting_pos.return_as_points",
+						args: {'source_name': me.doc.name}
+					});
+					
+				}, () => {
+					// action to perform if No is selected
+				});
 		});
 		this.$summary_container.on('click', '.change-rent-btn', () => {
-			// do return invoice
+			frappe.confirm(`هل أنت متأكد من الإستمرار في إستبدال الفاتورة رقم </br>
+				${this.doc.name}
+				</br> في حالة الموافقة سيتم إدراج أصناف الفاتورة الأصلية في الفاتورة الجديدة
+				وكل ما عليك فعله هو حذف الأصناف الغير مرغوب فيها`,
+
+				() => {
+					// action to perform if Yes is selected
+					this.process_change_rent();
+					
+				}, () => {
+					// action to perform if No is selected
+				});
 		});
+		this.$summary_container.on('click', '.full-return-btn', () => {
+			// do return invoice
+			frappe.confirm(`هل أنت متأكد من الإستمرار في إرجاع الفاتورة رقم </br>
+				${this.doc.name}`,
+
+				() => {
+					// action to perform if Yes is selected
+					this.process_full_return();
+					
+				}, () => {
+					// action to perform if No is selected
+				});
+		});
+	}
+
+	async process_full_return(){
+		const me = this;
+		const mode_of_payments = await frappe.call({
+			doc: me.doc,
+			method: "get_mode_of_payments"
+		});
+
+		if(mode_of_payments.message && mode_of_payments.message != "nothing"){
+			var payments = mode_of_payments.message;
+			const fields = [
+				{
+					label: 'Payment Details',
+					fieldname: 'payments',
+					fieldtype: 'Table',
+					cannot_add_rows: false,
+					in_place_edit: true,
+					data: payments,
+					fields: [
+						{ fieldname: 'mode_of_payment', 
+							fieldtype: 'Data', label: 'Payment Mode', in_list_view: 1},
+						{ fieldname: 'account', 
+							fieldtype: 'Data', label: 'Account'},
+						{ fieldname: 'type',
+							fieldtype: 'Data', label: 'Type'},
+						{ fieldname: 'base_amount', 
+							fieldtype: 'Currency', label: 'Amount', in_list_view: 1 }
+					]
+				}
+			]
+			var payments_dialog = new frappe.ui.Dialog({
+				title: 'Enter details',
+				fields: fields,
+				size: 'small', // small, large, extra-large 
+				primary_action_label: 'إرجاع',
+				async primary_action(values) {
+					var payments = values.payments;
+					var sum = payments.reduce((acc, curr) => acc + curr.base_amount, 0);
+					if (sum != (me.doc.total - me.doc.outstanding_amount)){
+						d.hide();
+						frappe.throw(__('اجمالي قيمة الراجع يجب ان يساوي القيمة المدفوعة من قبل'));
+					}
+					frappe.dom.freeze();
+					var final_payments = [];
+					for (const p of payments){
+						if(p.base_amount > 0){
+							final_payments.push({"mode_of_payment":p.mode_of_payment,
+								"account":p.account,
+								"bank_amount":p.base_amount,
+								"type":p.type,
+								"payment_entry_type": "Pay"})
+						}
+
+					}
+					var return_doc = await frappe.call({
+						method: "renting_services.renting_services.page.renting_pos.renting_pos.make_sales_return",
+						args: {'source_name': me.doc.name, "payments": final_payments}
+					});
+					payments_dialog.hide();
+					frappe.dom.unfreeze();
+					frappe.show_alert({message:__('تم الإرجاع بنجاح'), indicator: 'green'});
+				}
+			});
+			payments_dialog.show();
+		}
+
+	}
+
+	process_change_rent(){
+		const delivery_date = this.doc.delivery_date;
+		const occ_duration = frappe.datetime.get_day_diff(this.doc.return_date, delivery_date)
+		const items = this.doc.items;
+		this.events.change_order(this.doc.name, delivery_date, 
+			occ_duration, items, this.doc.customer);
+		this.toggle_component(false);
+		this.$component.find('.no-summary-placeholder').css('display', 'flex');
+		this.$summary_wrapper.css('display', 'none');
 	}
 
 	print_receipt() {
@@ -327,13 +448,8 @@ renting_services.PointOfRent.PastOrderSummary = class {
 	}
 
 	add_summary_btns(map) {
-		const outstanding_amount = this.doc.outstanding_amount;
-		const total = this.doc.total;
-		const rent_status = this.doc.rent_status;
 		const docstatus = this.doc.docstatus;
-		const limit_cashiers = this.limit_cashiers;
-		const is_cashier = frappe.user.has_role('كاشير');
-		const is_partial = outstanding_amount > 0 && total != outstanding_amount;
+
 		this.$summary_btns.html('');
 		map.forEach(m => {
 			if (m.condition) {
@@ -348,33 +464,59 @@ renting_services.PointOfRent.PastOrderSummary = class {
 		});
 
 		if (docstatus == 1){
+			const outstanding_amount = this.doc.outstanding_amount;
+			const total = this.doc.total;
+			const rent_status = this.doc.rent_status;
+			const limit_cashiers = this.limit_cashiers;
+			const is_cashier = frappe.user.has_role('كاشير');
+			const is_accounts_manager = frappe.user.has_role('Accounts Manager');
+			const is_partial = outstanding_amount > 0 && total != outstanding_amount;
+			const doc_age = moment().diff(this.doc.creation, 'hours') / 24
+
 			rent_status == 'غير مؤكد' && ((is_cashier == true && limit_cashiers == true) || 
 			(limit_cashiers == false)) ? 
 				this.$summary_btns.append(
 					`<div class="summary-btn btn btn-default confirm-rent-btn">${__('تأكيد الحجز')}</div>`) 
 					: '';
-			if (rent_status == 'محجوز'){
+			
+			if (['محجوز','تأخير (استلام)'].includes(rent_status) && 
+				(is_cashier || is_accounts_manager)){
+
 				this.$summary_btns.append(
 					`<div class="summary-btn btn btn-default deliver-btn">${__('تسليم للزبون')}</div>`);
-				this.$summary_btns.append(
-					`<div class="summary-btn btn btn-default return-points-btn">${__('رصيد للزبون')}</div>`);
+				
+				if(is_accounts_manager || this.limit_payment_refund=== false ||
+					(this.limit_payment_refund && doc_age <= this.allow_full_return_in_days)
+					
+				){
+					this.$summary_btns.append(
+						`<div class="summary-btn btn btn-default full-return-btn">${__('إرجاع تام')}</div>`);
+				}
+				else{
+					this.$summary_btns.append(
+						`<div class="summary-btn btn btn-default return-points-btn">${__('رصيد للزبون')}</div>`);
+				}
+				
 				this.$summary_btns.append(
 					`<div class="summary-btn btn btn-default change-rent-btn">${__('تغيير الحجز')}</div>`);
 			}
-			
-			rent_status == 'خارج' ? 
+			if (rent_status == 'خارج'){
 				this.$summary_btns.append(
-					`<div class="summary-btn btn btn-default recieve-rent-btn">${__('إستلام/تنظيف')}</div>`) 
-					: '';
+					`<div class="summary-btn btn btn-default recieve-rent-btn">${__('إستلام/تنظيف')}</div>`);
+				this.$summary_btns.append(
+					`<div class="summary-btn btn btn-default print-sticker-btn">${__('طباعة ملصق الضمان')}</div>`);
+			}
+
 			if (is_partial){
 				(is_cashier == true && limit_cashiers == true) || 
 				(limit_cashiers == false) ? this.$summary_btns.append(
 					`<div class="summary-btn btn btn-default pay-rent-btn">${__('دفع')}</div>`) 
 					: '';
 			}
+
 			
 		}
-		
+
 		this.$summary_btns.children().last().removeClass('mr-4');
 	}
 
@@ -390,12 +532,19 @@ renting_services.PointOfRent.PastOrderSummary = class {
 
 	get_condition_btn_map(after_submission) {
 		if (after_submission)
-			return [{ condition: true, visible_btns: ['Print Receipt', 'Email Receipt', 'New Order'] }];
+			return [{ condition: true, visible_btns: ['طباعة الفاتورة', //'Email Receipt', 
+		'New Order'] }];
 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ['Edit Order', 'Delete Order'] },
-			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print Receipt', 'Email Receipt', 'Return']},
-			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print Receipt', 'Email Receipt']}
+			{ condition: this.doc.docstatus === 0, visible_btns: ['Edit Order', //'Delete Order'
+
+			] },
+			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['طباعة الفاتورة', //'Email Receipt'
+
+			]},
+			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['طباعة الفاتورة', //'Email Receipt'
+
+			]}
 		];
 	}
 

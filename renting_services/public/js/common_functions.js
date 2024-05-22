@@ -1,4 +1,6 @@
 frappe.provide("renting_services.item_process");
+frappe.provide("renting_services");
+
 
 renting_services.common = {
 	setup_renting_controller: function () {
@@ -287,4 +289,65 @@ renting_services.common = {
             }
         }
     }
+}
+
+
+
+
+
+/**
+ * Represents a renting service with a method to print a PDF directly.
+ *
+ * @namespace renting_services
+ */
+renting_services.print_directly = async function(doctype, doc_name, print_format, no_letterhead=0) {
+    /**
+     * Prints the provided PDF directly.
+     *
+     * This function takes a PDF file and prints it directly without any additional processing.
+     * It can also accept an optional page size parameter to specify the size of the printed pages.
+     *
+     * @param {file} pdf - The PDF file to be printed.
+     * @param {dict} [page_size={width: 210, height: 297}] - Optional. The size of the printed pages. If not provided,
+     *                                          the default page size will be used which is A4.
+     */
+    
+    const printing_info = await frappe.call({
+        method:"renting_services.utils.utils.get_print_as_pdf",
+        args:{
+            doctype: doctype,
+            name:doc_name,
+            format:print_format,
+            no_letterhead: no_letterhead
+        }
+    });
+    if(printing_info.message){
+        const pdf_file = printing_info.message[0];
+        const printer = printing_info.message[1]["printer"];
+        const page_size = {
+            width: printing_info.message[1]["page_width"] || 210,
+            height: printing_info.message[1]["page_height"] || 297
+        }
+        frappe.ui.form.qz_connect()
+        .then(function () {
+            var config = qz.configs.create(printer,
+                {
+                    size: page_size, units: 'mm',
+                }
+            );
+            var data = [{
+                type: 'pixel',
+                format: 'pdf',
+                flavor: 'base64',
+                data: new Uint8Array(pdf_file)
+        }];
+            return qz.print(config, data);
+
+        })
+        .then(frappe.ui.form.qz_success)
+        .catch(err => {
+            frappe.ui.form.qz_fail(err);
+        });
+    }
+    
 }

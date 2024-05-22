@@ -4,6 +4,11 @@
     padding-bottom: var(--padding-xs);
 }
 
+.is-change-inv {
+    display: none;
+    padding-left: 5px;
+}
+
 .point-of-sale-app > .items-selector > .filter-section-second-line {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));

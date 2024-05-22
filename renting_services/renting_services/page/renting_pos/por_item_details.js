@@ -8,6 +8,7 @@ renting_services.PointOfRent.ItemDetails = class {
 		this.current_item = {};
 		this.occ_date = null;
 		this.occ_duration = 1;
+		this.items = [];
 		this.init_component();
 	}
 
@@ -263,7 +264,6 @@ renting_services.PointOfRent.ItemDetails = class {
 			render_input: true,
 		})
 
-
 		this.occ_date_control.set_value(this.occ_date);
 		
 		if (this.occ_date != null){
@@ -277,7 +277,7 @@ renting_services.PointOfRent.ItemDetails = class {
 						"item_code": [me.current_item.item_code] },
 				callback: (res) => {
 					const rents = res.message;
-					if(rents.length > 0){
+					if(rents.length > 0 && !me.items.includes(me.current_item.item_code)){
 						let inv_out_date = rents[0].delivery_date;
 						let inv_return_date = rents[0].return_date;
 						let inv_before_date = frappe.datetime.add_days(inv_out_date, -1);

@@ -297,38 +297,42 @@ renting_services.PointOfRent.ItemCart = class {
 			<div class="customer-field"></div>
 		`);
 		const me = this;
-		const query = { query: 'erpnext.controllers.queries.customer_query' };
 		const allowed_customer_group = this.allowed_customer_groups || [];
+		let filters = {};
 		if (allowed_customer_group.length) {
-			query.filters = {
-				customer_group: ['in', allowed_customer_group]
-			}
+			filters = {
+				customer_group: ["in", allowed_customer_group],
+			};
 		}
 		this.customer_field = frappe.ui.form.make_control({
 			df: {
-				label: __('Customer'),
-				fieldtype: 'Link',
-				options: 'Customer',
-				placeholder: __('Search by customer name, phone, email.'),
-				get_query: () => query,
-				onchange: function() {
+				label: __("Customer"),
+				fieldtype: "Link",
+				options: "Customer",
+				placeholder: __("Search by customer name, phone, email."),
+				get_query: function () {
+					return {
+						filters: filters,
+					};
+				},
+				onchange: function () {
 					if (this.value) {
 						const frm = me.events.get_frm();
 						frappe.dom.freeze();
-						frappe.model.set_value(frm.doc.doctype, frm.doc.name, 'customer', this.value);
-						frm.script_manager.trigger('customer', frm.doc.doctype, frm.doc.name).then(() => {
+						frappe.model.set_value(frm.doc.doctype, frm.doc.name, "customer", this.value);
+						frm.script_manager.trigger("customer", frm.doc.doctype, frm.doc.name).then(() => {
 							frappe.run_serially([
 								() => me.fetch_customer_details(this.value),
 								() => me.events.customer_details_updated(me.customer_info),
 								() => me.update_customer_section(),
 								() => me.update_totals_section(),
-								() => frappe.dom.unfreeze()
+								() => frappe.dom.unfreeze(),
 							]);
-						})
+						});
 					}
 				},
 			},
-			parent: this.$customer_section.find('.customer-field'),
+			parent: this.$customer_section.find(".customer-field"),
 			render_input: true,
 		});
 		this.customer_field.toggle_label(false);
