@@ -903,6 +903,13 @@ renting_services.PointOfRent.Controller = class {
 		// const is_cashier = frappe.user.has_role('كاشير');
 		// const enable_pay = (is_cashier == true && limit_cashiers == true) || 
 		// 			(limit_cashiers == false) ? 1 : 0;
+		if(this.frm.doc.customer === this.settings.customer){
+			frappe.msgprint("الرجاء تغيير الزبون من الزبون الإفتراضي");
+			return;
+		}
+		
+		this.cart.toggle_checkout_btn(false);
+
 		const enable_pay = 0;
 		this.frm.set_value("is_pos", enable_pay);
 

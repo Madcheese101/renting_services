@@ -195,7 +195,6 @@ renting_services.PointOfRent.ItemCart = class {
 			if ($(this).attr('style').indexOf('--blue-500') == -1) return;
 
 			await me.events.checkout();
-			me.toggle_checkout_btn(false);
 
 			me.allow_discount_change && me.$add_discount_elem.removeClass("d-none");
 		});
