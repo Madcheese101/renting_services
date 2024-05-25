@@ -78,6 +78,10 @@
     margin-top: 15px;
 }
 
+.point-of-sale-app > .past-order-summary > .invoice-summary-wrapper > .abs-container > .items-container {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
 .point-of-sale-app > .past-order-summary > .invoice-summary-wrapper > .abs-container > .summary-btns {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
