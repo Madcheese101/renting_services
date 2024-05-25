@@ -6,3 +6,5 @@ import "renting_services/renting_services/page/renting_pos/por_payment.js";
 import "renting_services/renting_services/page/renting_pos/por_past_order_list.js";
 import "renting_services/renting_services/page/renting_pos/por_past_order_summary.js";
 import "renting_services/renting_services/page/renting_pos/por_controller.js";
+import "renting_services/renting_services/page/renting_pos/por_customer_list.js";
+import "renting_services/renting_services/page/renting_pos/por_customer_summary.js";

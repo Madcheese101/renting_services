@@ -97,3 +97,221 @@
 
 
 
+.point-of-sale-app > .customers-list {
+    grid-column: span 4/span 4;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .point-of-sale-app > .customers-list > .filter-section {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--fg-color);
+    padding: var(--padding-lg);
+  }
+  .point-of-sale-app > .customers-list > .filter-section > .search-field {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-top: var(--margin-md);
+    margin-bottom: var(--margin-xs);
+  }
+
+  .point-of-sale-app > .customers-list > .customers-container {
+    padding: var(--padding-lg);
+    padding-top: 0px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+
+  .point-of-sale-app .customer-wrapper {
+    display: flex;
+    justify-content: space-between;
+    border-radius: var(--border-radius-md);
+    padding: var(--padding-sm);
+  }
+  .point-of-sale-app .customer-wrapper:hover {
+    background-color: var(--gray-50);
+  }
+  .point-of-sale-app .customer-wrapper > .customer-name-mobile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+  .point-of-sale-app .customer-wrapper > .customer-name-mobile > .customer-name {
+    font-size: var(--text-md);
+    font-weight: 700;
+  }
+  .point-of-sale-app .customer-wrapper > .customer-name-mobile > .customer-mobile {
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+  }
+
+
+  .point-of-sale-app > .customer-summary {
+    display: none;
+    grid-column: span 6/span 6;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .point-of-sale-app > .customer-summary > .no-summary-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: var(--gray-50);
+    font-weight: 500;
+    border-radius: var(--border-radius-md);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper {
+    display: none;
+    position: relative;
+    // width: 31rem;
+    width: 100%;
+    height: 100%;
+  }
+  .print-item {
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    background-color: var(--btn-primary);
+    color: var(--neutral);
+}
+  .print-item:hover {
+    background-color: #91C8E4;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: var(--padding-lg);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: var(--margin-md);
+    width: 31rem;
+    align-self: center;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .left-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-right: var(--padding-sm);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .left-section > .customer-name {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .left-section > .customer-email {
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .left-section > .cashier {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-top: auto;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .right-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .right-section > .paid-amount {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .upper-section > .right-section > .invoice-name {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-bottom: var(--margin-sm);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container {
+    // display: flex;
+    // flex-direction: column;
+    // border-radius: var(--border-radius-md);
+    // background-color: var(--control-bg);
+    margin: var(--margin-md) 0px;
+    height: 75%;
+  }
+
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .datatable {
+    border-radius: var(--border-radius-md);
+    background-color: var(--control-bg);
+    margin: var(--margin-md) 0px;
+  }
+
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container >.datatable .dt-scrollable .dt-cell__content {
+    font-feature-settings: unset;
+    text-align: center;
+    }
+
+
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .datatable > .dt-scrollable{
+    width: 100% !important;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .summary-row-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--padding-sm) var(--padding-md);
+  }
+
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper {
+    display: flex;
+    align-items: center;
+    padding: var(--padding-sm) var(--padding-md);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper > .item-name {
+    font-weight: 500;
+    margin-right: var(--margin-md);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper > .item-date {
+    font-weight: 500;
+    // margin-left: auto;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper > .item-rate-disc {
+    display: flex;
+    text-align: right;
+    margin-left: var(--margin-md);
+    justify-content: flex-end;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper > .item-rate-disc > .item-paid-amount {
+    color: var(--dark-green-500);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .item-row-wrapper > .item-rate-disc > .item-total {
+    font-weight: 500;
+    margin-left: var(--margin-md);
+  }
+  
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .grand-total {
+    font-weight: 700;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-container > .payments {
+    font-weight: 700;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-btns {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--margin-md);
+    width: 31rem;
+    align-self: center;
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-btns > .summary-btn {
+    flex: 1;
+    margin: 0px var(--margin-xs);
+  }
+  .point-of-sale-app > .customer-summary > .customer-summary-wrapper > .abs-container > .summary-btns > .new-btn {
+    background-color: var(--blue-500);
+    color: white;
+    font-weight: 500;
+  }

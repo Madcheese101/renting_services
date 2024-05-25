@@ -63,6 +63,8 @@ renting_services.PointOfRent.Controller = class {
 		this.init_payments();
 		this.init_recent_order_list();
 		this.init_order_summary();
+		this.init_customers_list();
+		this.init_customer_summary();
 	}
 
 	prepare_menu() {
@@ -70,12 +72,10 @@ renting_services.PointOfRent.Controller = class {
 
 		// this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, 'Ctrl+F');
 		// this.page.add_menu_item(__("Toggle Recent Orders"), this.toggle_recent_order.bind(this), false, 'Ctrl+O');
-
 		// this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, 'Ctrl+S');
 		// this.page.add_menu_item(__('Close the POS'), this.close_pos.bind(this), false, 'Shift+Ctrl+C');
-		this.page.add_inner_button('تجميد و جديد', this.save_draft_invoice.bind(this), 'إجراءات');
-		this.page.add_inner_button('فاتورة جديدة', this.new_invoice.bind(this), 'إجراءات');
-		this.page.add_inner_button('فواتير', this.toggle_recent_order.bind(this),null,'primary');
+		
+		this.set_inner_toolbar();
 	}
 
 	open_form_view() {
@@ -86,8 +86,11 @@ renting_services.PointOfRent.Controller = class {
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(':hidden');
 		this.toggle_recent_order_list(show);
-		// show ? this.page.set_primary_action('الرجوع لنقطة البيع', 
-		// 	() => this.toggle_recent_order_list(false)) : '';
+
+	}
+	toggle_customers() {
+		const show = this.customers_list.$component.is(':hidden');
+		this.toggle_customers_list(show);
 
 	}
 	new_invoice(){
@@ -367,6 +370,26 @@ renting_services.PointOfRent.Controller = class {
 			}
 		})
 	}
+	init_customers_list() {
+		this.customers_list = new renting_services.PointOfRent.CustomersList({
+			wrapper: this.$components_wrapper,
+			events: {
+				open_customer_data: (name) => {
+					// was POS Invoice
+					frappe.db.get_doc('Customer', name).then((doc) => {
+						this.customer_summary.load_summary_of(doc);
+					});
+				},
+				reset_customer_summary: () => this.customer_summary.toggle_summary_placeholder(true)
+			}
+		})
+	}
+	init_customer_summary() {
+		this.customer_summary = new renting_services.PointOfRent.CustomerSummary({
+			wrapper: this.$components_wrapper,
+			settings: this.settings,
+		})
+	}
 	toggle_is_change_pill(show) {
 		this.is_change_pill.css('display', show ? 'flex': 'none');
 	}
@@ -380,11 +403,30 @@ renting_services.PointOfRent.Controller = class {
 			this.page.add_inner_button('نقطة الحجز', this.toggle_recent_order.bind(this),null,'primary');
 
 		}else{
-			this.page.clear_inner_toolbar();
-			this.page.add_inner_button('تجميد و جديد', this.save_draft_invoice.bind(this), 'إجراءات');
-			this.page.add_inner_button('فاتورة جديدة', this.new_invoice.bind(this), 'إجراءات');
-			this.page.add_inner_button('فواتير', this.toggle_recent_order.bind(this),null,'primary');
+			this.set_inner_toolbar();
 		}
+	}
+
+	toggle_customers_list(show) {
+		this.toggle_components(!show);
+		this.customers_list.toggle_component(show);
+		this.customer_summary.toggle_component(show);
+		if (show){
+			this.page.clear_inner_toolbar();
+			this.page.add_inner_button('نقطة الحجز', this.toggle_customers.bind(this),null,'primary');
+
+		}else{
+			this.set_inner_toolbar();
+		}
+	}
+
+	set_inner_toolbar(){
+		this.page.clear_inner_toolbar();
+		this.page.add_inner_button('تجميد و جديد', this.save_draft_invoice.bind(this), 'إجراءات');
+		this.page.add_inner_button('فاتورة جديدة', this.new_invoice.bind(this), 'إجراءات');
+		this.page.add_inner_button('معاملات الزبائن', this.toggle_customers.bind(this), 'إجراءات');
+		this.page.add_inner_button('فواتير', this.toggle_recent_order.bind(this),null,'primary');
+
 	}
 
 	toggle_components(show) {

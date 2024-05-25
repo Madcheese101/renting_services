@@ -12,6 +12,8 @@ from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
+from erpnext.accounts.party import get_dashboard_info, validate_party_accounts
+
 @frappe.whitelist()
 def get_pos_profile():
     profileslist = frappe.db.get_list("POS Profile", filters={"disabled": 0},pluck="name")
@@ -86,6 +88,102 @@ def get_past_order_list(search_term, limit=50):
                                     fields=fields, limit=limit)
 
     return invoice_list
+
+@frappe.whitelist()
+def get_customers_list(search_term, limit=50):
+    fields = ["name", 
+              "customer_name", 
+              "mobile_no"]
+    
+    name_filter = {"customer_name": ["like", "%{}%".format(search_term)]}
+    mobile_filter = {"mobile_no": ["like", "%{}%".format(search_term)]}
+        
+    customer_list = []
+    
+    if search_term:
+        customers_by_name = frappe.db.get_all(
+            "Customer",
+            filters=name_filter,
+            fields=fields,limit=limit
+        )
+        customers_by_mobile = frappe.db.get_all(
+            "Customer",
+            filters=mobile_filter,
+            fields=fields,limit=limit
+        )
+
+        customer_list = customers_by_name + customers_by_mobile
+    else:
+        customer_list = frappe.db.get_all("Customer",
+                                    fields=fields, limit=limit)
+
+    return customer_list
+
+@frappe.whitelist()
+def load_customer_dashboard_info(docname, loyalty_program):
+    return get_dashboard_info("Customer", docname, loyalty_program)
+
+@frappe.whitelist()
+def get_customer_invoices(customer):
+    fields = ["posting_date",
+              "name",
+              "grand_total",
+              "(grand_total - outstanding_amount) as paid_amount",
+              "status",
+              "rent_status",
+              "name as name_to_print"]
+    filters = {"customer":customer}
+    return frappe.get_all("Sales Invoice", fields=fields, filters=filters) or []
+    
+@frappe.whitelist()
+def get_customer_unlinked_payments(customer, payments):
+    payments = json.loads(payments)
+    fields = ["name",
+              "paid_amount",
+              "mode_of_payment",
+              "posting_date",
+              "name as name_to_print"]
+    filters = {"party":customer,
+               "payment_type": "Receive",
+               "total_allocated_amount": 0,
+            #    "mode_of_payment":["in", payments],
+               "docstatus": 1}
+    return frappe.get_all("Payment Entry", fields=fields, filters=filters) or []
+
+@frappe.whitelist()
+def get_customer_linked_payments(customer, payments):
+    payments = json.loads(payments)
+    result = []
+    fields = ["name",
+              "paid_amount",
+              "total_allocated_amount",
+              "mode_of_payment",
+              "posting_date",
+              "name as name_to_print",
+              "(0) as indent"]
+    filters = {"party":customer,
+               "payment_type": "Receive",
+               "total_allocated_amount": ["!=", 0],
+            #    "mode_of_payment":["in", payments],
+               "docstatus": 1}
+    
+    payments = frappe.get_all("Payment Entry", fields=fields, filters=filters)
+
+    for payment in payments:
+        payment["remaining_amount"] = payment.paid_amount - payment.total_allocated_amount
+        result.append(payment)
+        invoices = frappe.get_all("Payment Entry Reference",
+                                  fields=[
+                                      "reference_name as name",
+                                    #   "total_amount as inv_amount",
+                                    #   "outstanding_amount",
+                                    #   "allocated_amount",
+                                      "(1) as indent"
+                                  ],
+                                  filters={"parent":payment.name})
+        result.extend(invoices)
+        
+    return  result or []
 
 @frappe.whitelist()
 def deliver_items(sales_invoice_doc, guarantee_type):
