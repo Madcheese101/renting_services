@@ -11,7 +11,7 @@ app_license = "MIT"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "renting-services.bundle.css"
+app_include_css = ["renting_services.bundle.css"]
 app_include_js = "renting_services.bundle.js"
 # app_include_js = "/assets/renting_services/js/renting_services.js"
 
@@ -258,7 +258,8 @@ fixtures = [
                     "Branch-letter_head",
                     "Branch-warehouse",
                     "Branch-custom_printers",
-                    "Branch-custom_default_printer"
+                    "Branch-custom_default_printer",
+                    "Mode of Payment Account-custom_middleman_account"
                 ),
             ]
         ]

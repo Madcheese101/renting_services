@@ -65,6 +65,9 @@ renting_services.PointOfRent.Controller = class {
 		this.init_order_summary();
 		this.init_customers_list();
 		this.init_customer_summary();
+		const accounts_user = frappe.user.has_role('Accounts User');
+
+		accounts_user ? this.init_close_day() : null;
 	}
 
 	prepare_menu() {
@@ -92,6 +95,10 @@ renting_services.PointOfRent.Controller = class {
 		const show = this.customers_list.$component.is(':hidden');
 		this.toggle_customers_list(show);
 
+	}
+	toggle_close_day() {
+		const show = this.close_day.$component.is(':hidden');
+		this.toggle_close_day_window(show);
 	}
 	new_invoice(){
 		this.make_new_invoice();
@@ -390,6 +397,18 @@ renting_services.PointOfRent.Controller = class {
 			settings: this.settings,
 		})
 	}
+
+	init_close_day() {
+		
+		this.close_day = new renting_services.PointOfRent.CloseDay({
+			wrapper: this.$components_wrapper,
+			settings: this.settings,
+			events: {
+
+			}
+		})
+	}
+
 	toggle_is_change_pill(show) {
 		this.is_change_pill.css('display', show ? 'flex': 'none');
 	}
@@ -419,12 +438,26 @@ renting_services.PointOfRent.Controller = class {
 			this.set_inner_toolbar();
 		}
 	}
+	
+	toggle_close_day_window(show) {
+		this.toggle_components(!show);
+		this.close_day.toggle_component(show);
+		if (show){
+			this.page.clear_inner_toolbar();
+			this.page.add_inner_button('نقطة الحجز', this.toggle_close_day.bind(this),null,'primary');
+
+		}else{
+			this.set_inner_toolbar();
+		}
+	}
 
 	set_inner_toolbar(){
+		const accounts_user = frappe.user.has_role('Accounts User');
 		this.page.clear_inner_toolbar();
 		this.page.add_inner_button('تجميد و جديد', this.save_draft_invoice.bind(this), 'إجراءات');
 		this.page.add_inner_button('فاتورة جديدة', this.new_invoice.bind(this), 'إجراءات');
 		this.page.add_inner_button('معاملات الزبائن', this.toggle_customers.bind(this), 'إجراءات');
+		if(accounts_user){this.page.add_inner_button('إغلاق اليوم', this.toggle_close_day.bind(this), 'إجراءات');}
 		this.page.add_inner_button('فواتير', this.toggle_recent_order.bind(this),null,'primary');
 
 	}

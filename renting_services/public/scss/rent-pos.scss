@@ -319,3 +319,49 @@
     color: white;
     font-weight: 500;
   }
+
+  .point-of-sale-app > .close-day {
+    grid-column: span 10/span 10;
+    display: none;
+    flex-direction: column;
+  }
+  // .point-of-sale-app > .close-day > .filter-section {
+  //   display: flex;
+  //   flex-direction: column;
+  //   background-color: var(--fg-color);
+  //   padding: var(--padding-lg);
+  // }
+  // .point-of-sale-app > .close-day > .filter-section > .search-field {
+  //   width: 100%;
+  //   display: flex;
+  //   align-items: center;
+  //   margin-top: var(--margin-md);
+  //   margin-bottom: var(--margin-xs);
+  // }
+
+  .point-of-sale-app > .close-day > .label{
+    justify-content: center;
+    font-weight: 500;
+    font-size: x-large;
+  }
+  .point-of-sale-app > .close-day > hr.solid {
+    border-top: 1px solid #eaeaea !important;
+    width: 90%;
+  }
+  .point-of-sale-app > .close-day > .close-day-container {
+    padding: var(--padding-lg);
+    // padding-top: 0px;
+  }
+  .point-of-sale-app > .close-day > .close-day-container > .upper-section {
+    display: flex;
+    justify-content: space-between;
+  }
+  .point-of-sale-app > .close-day > .close-day-container > .upper-section > .transfer-balance-btn {
+    height: 30px;
+  }
+
+  .point-of-sale-app > .close-day > .close-day-container > .accounts-container > .datatable {
+    border-radius: var(--border-radius-md);
+    background-color: var(--control-bg);
+    margin: var(--margin-md) 0px;
+  }

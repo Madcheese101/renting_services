@@ -8,3 +8,4 @@ import "renting_services/renting_services/page/renting_pos/por_past_order_summar
 import "renting_services/renting_services/page/renting_pos/por_controller.js";
 import "renting_services/renting_services/page/renting_pos/por_customer_list.js";
 import "renting_services/renting_services/page/renting_pos/por_customer_summary.js";
+import "renting_services/renting_services/page/renting_pos/por_close_day.js";
