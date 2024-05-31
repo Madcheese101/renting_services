@@ -1,6 +1,7 @@
 renting_services.PointOfRent.PastOrderList = class {
-	constructor({ wrapper, events }) {
+	constructor({ wrapper, pos_profile, events }) {
 		this.wrapper = wrapper;
+		this.pos_profile = pos_profile;
 		this.events = events;
 
 		this.init_component();
@@ -66,7 +67,7 @@ renting_services.PointOfRent.PastOrderList = class {
 		return frappe.call({
 			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_past_order_list",
 			freeze: true,
-			args: { search_term:_search_term },
+			args: { search_term:_search_term, pos_profile:this.pos_profile },
 			callback: (response) => {
 				frappe.dom.unfreeze();
 				response.message.forEach(invoice => {

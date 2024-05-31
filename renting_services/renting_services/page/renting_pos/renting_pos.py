@@ -59,7 +59,7 @@ def get_available_products(pos_profile, before_date, after_date):
     return result.run(pluck="item_code")
 
 @frappe.whitelist()
-def get_past_order_list(search_term, limit=50):
+def get_past_order_list(search_term, pos_profile, limit=50):
     fields = ["name", 
               "grand_total", 
               "currency", 
@@ -67,27 +67,24 @@ def get_past_order_list(search_term, limit=50):
               "posting_time", 
               "posting_date"]
     
-    customer_filters = {"customer": ["like", "%{}%".format(search_term)]}
-    name_filters = {"name": ["like", "%{}%".format(search_term)]}
-        
+    or_filters = {"name": ["like", "%{}%".format(search_term)],
+                  "customer": ["like", "%{}%".format(search_term)]}
     invoice_list = []
     
     if search_term:
-        invoices_by_customer = frappe.db.get_all(
-            "Sales Invoice",
-            filters=customer_filters,
-            fields=fields,limit=limit
-        )
         invoices_by_name = frappe.db.get_all(
             "Sales Invoice",
-            filters=name_filters,
+            filters={"pos_profile":pos_profile},
+            or_filters=or_filters,
             fields=fields,limit=limit
         )
 
-        invoice_list = invoices_by_customer + invoices_by_name
+        invoice_list = invoices_by_name
     else:
-        invoice_list = frappe.db.get_all("Sales Invoice", filters={"status": "Draft"}, 
-                                    fields=fields, limit=limit)
+        invoice_list = frappe.db.get_all("Sales Invoice", 
+                                        filters={"status": "Draft", 
+                                                 "pos_profile":pos_profile}, 
+                                        fields=fields, limit=limit)
 
     return invoice_list
 
