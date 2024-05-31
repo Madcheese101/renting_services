@@ -1,18 +1,20 @@
 import json
 import frappe
-from erpnext.selling.page.point_of_sale.point_of_sale import get_pos_profile_data
-from frappe.query_builder import DocType
+from frappe import _
 from pypika import Criterion
-from frappe.utils import get_fullname, cint
-from erpnext.selling.page.point_of_sale.point_of_sale import (search_by_term,
-                                                              get_conditions,
-                                                              get_item_group_condition)
-from frappe.utils.nestedset import get_root_of
+from frappe.query_builder import DocType
 
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
-from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
 from erpnext.stock.utils import scan_barcode
-from erpnext.accounts.party import get_dashboard_info, validate_party_accounts
+from frappe.utils import get_fullname, cint, flt
+from frappe.utils.nestedset import get_root_of
+from erpnext.accounts.utils import get_balance_on
+
+from erpnext.selling.page.point_of_sale.point_of_sale import get_pos_profile_data, search_by_term
+
+from erpnext.accounts.party import get_dashboard_info
+from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
+from erpnext.accounts.doctype.pos_profile.pos_profile import get_item_groups
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_company_defaults
 
 @frappe.whitelist()
 def get_pos_profile():
@@ -436,3 +438,103 @@ def get_items(start, page_length, price_list,
             result.append(row)
             
     return {"items": result}
+
+@frappe.whitelist()
+def get_accounts_balances(mode_of_payments, date, company):
+    mode_of_payments = json.loads(mode_of_payments)
+    result = []
+
+    for mode_of_payment in mode_of_payments:
+        account, middleman_account = frappe.get_value("Mode of Payment Account",{
+                                     "parent": mode_of_payment,
+                                     "company": company
+                                    }, ["default_account", "middleman_account"])
+        account_balance = get_balance_on(account, date, ignore_account_permission=True) or 0
+        row = {"mode_of_payment": mode_of_payment,
+               "company": company,
+               "from_account": account,
+               "to_account": middleman_account,
+               "account_balance": account_balance, 
+               "date": date,
+               "paid_amount":0,
+               "diff_amount":0,}
+        result.append(row)
+    return result
+
+@frappe.whitelist()
+def transfer_accounts_balance(data, cost_center=None):
+    data = json.loads(data)
+    docs = []
+    for payment in data:
+        # skip this iteration if 
+        # paid amount == 0
+        if payment["paid_amount"] == 0:
+            continue
+        
+        if not payment["to_account"]:
+            frappe.msgprint("حساب الوسيط غير معد لطريقة الدفع: {0}".format(payment["mode_of_payment"]))
+            continue
+
+        payment_mode_type = frappe.get_value("Mode of Payment",{
+                                     "name": payment["mode_of_payment"]
+                                    }, ["type"])
+        
+        payment_doc = frappe.new_doc("Payment Entry")
+        payment_doc.payment_type = "Internal Transfer"
+        payment_doc.mode_of_payment = payment["mode_of_payment"]
+        payment_doc.posting_date = payment["date"]
+        payment_doc.company = payment["company"]
+        payment_doc.paid_from = payment["from_account"]
+        payment_doc.paid_to = payment["to_account"]
+        payment_doc.paid_amount = payment["account_balance"]
+        payment_doc.received_amount = payment["paid_amount"]
+        payment_doc.cost_center = cost_center
+        
+        payment_doc.set_missing_values()
+        payment_doc.set_amounts()
+        payment_doc.set_exchange_rate()
+        if payment_mode_type == "Bank":
+            payment_doc.reference_date = payment["date"]
+            payment_doc.reference_no= f"{payment_doc.reference_date} - {payment_doc.mode_of_payment}"
+
+        payment_doc.insert()
+
+        if payment_doc.difference_amount != 0:
+            company_defaults = get_company_defaults(payment["company"])
+            write_off_row = [t for t in payment_doc.get("deductions", []) 
+                             if t.get("account") == company_defaults.get("exchange_gain_loss_account")]
+            row = None
+            if not write_off_row and payment_doc.difference_amount:
+                row = payment_doc.append("deductions")
+                row.account = company_defaults.get("exchange_gain_loss_account")
+                row.cost_center = cost_center or company_defaults.get("cost_center")
+            else:
+                row = write_off_row[0]
+
+            if row:
+                row.amount = flt(row.amount) + flt(payment_doc.difference_amount)
+            else:
+                frappe.msgprint(_("No gain or loss in the exchange rate"))
+            payment_doc.save()
+        
+        payment_doc.submit()
+        frappe.msgprint("تم ادخال إيصال تحويل لخزينة الوسيط لطريقة الدفع: {0}".format(payment["mode_of_payment"]))
+
+    return docs
+
+@frappe.whitelist()
+def get_transfer_payments(mode_of_payments, date):
+    mode_of_payments = json.loads(mode_of_payments)
+
+    fields = ["name", 
+              "mode_of_payment", 
+              "posting_date",
+              "paid_amount", 
+              "received_amount", 
+              "(paid_amount - received_amount) as diff_amount"]
+    
+    fitlers = {"mode_of_payment": ["in", mode_of_payments],
+               "posting_date": date,
+               "docstatus": 1}
+    
+    return frappe.get_all("Payment Entry", fields=fields, filters=fitlers)
