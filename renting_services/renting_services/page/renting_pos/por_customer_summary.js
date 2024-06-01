@@ -85,6 +85,10 @@ renting_services.PointOfRent.CustomerSummary = class {
 			if (me.doctype == "Sales Invoice"){
 				renting_services.print_directly(me.doctype, doc_id, "Rent Invoice");
 			}
+			if (me.doctype == "Payment Entry"){
+				renting_services.print_directly(me.doctype, doc_id, "Payment Receipt");
+
+			}
 		});
 		
 	}
