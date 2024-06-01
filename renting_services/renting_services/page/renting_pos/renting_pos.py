@@ -227,7 +227,7 @@ def return_and_clean(sales_invoice_doc, notes):
 def make_sales_return(payments, source_name, target_doc=None):
     from erpnext.controllers.sales_and_purchase_return import make_return_doc
     from renting_services.overrides.rent_invoice import get_payment_entry
-
+    completed_payments = []
     payments_ = json.loads(payments)
     return_invoice = make_return_doc("Sales Invoice", source_name, target_doc)
     return_invoice.is_pos = 0
@@ -258,8 +258,8 @@ def make_sales_return(payments, source_name, target_doc=None):
         payment_doc.title += " (إرجاع للزبون)"
         payment_doc.save()
         payment_doc.submit()
-
-    return return_invoice
+        completed_payments.append(payment_doc.name)
+    return completed_payments
 
 @frappe.whitelist()
 def return_as_points(source_name, target_doc=None):
