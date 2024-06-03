@@ -294,6 +294,7 @@ renting_services.PointOfRent.Controller = class {
 	init_recent_order_list() {
 		this.recent_order_list = new renting_services.PointOfRent.PastOrderList({
 			wrapper: this.$components_wrapper,
+			pos_profile: this.pos_profile,
 			events: {
 				open_invoice_data: (name) => {
 					// was POS Invoice
