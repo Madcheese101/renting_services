@@ -34,7 +34,8 @@ app_include_js = "renting_services.bundle.js"
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 doctype_js = {"Payment Entry" : "public/js/payment_entry.js",
               "Sales Invoice" : "public/js/rent_invoice.js",
-              "Branch" : "public/js/branch.js"}
+              "Branch" : "public/js/branch.js",
+              "Item" : "public/js/item.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
