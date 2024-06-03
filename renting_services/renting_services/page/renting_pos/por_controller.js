@@ -41,6 +41,7 @@ renting_services.PointOfRent.Controller = class {
 		this.prepare_components();
 		this.prepare_menu();
 		this.make_new_invoice();
+        frappe.ui.form.qz_init_ser();
 	}
 
 	prepare_dom() {
