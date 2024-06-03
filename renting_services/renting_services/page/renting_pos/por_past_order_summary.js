@@ -220,7 +220,6 @@ renting_services.PointOfRent.PastOrderSummary = class {
 		});
 
 		this.$summary_container.on('click', '.print-btn', () => {
-			// this.print_receipt();
 			renting_services.print_directly(this.doc.doctype, this.doc.name, "Rent Invoice");
 		});
 
@@ -455,7 +454,7 @@ renting_services.PointOfRent.PastOrderSummary = class {
 			if (m.condition) {
 				m.visible_btns.forEach(b => {
 					const class_name = b.split(' ')[0].toLowerCase();
-					const btn = __(b);
+					const btn = class_name === "print" ? "طباعة الفاتورة" : __(b);
 					this.$summary_btns.append(
 						`<div class="summary-btn btn btn-default ${class_name}-btn">${btn}</div>`
 					);
@@ -532,17 +531,17 @@ renting_services.PointOfRent.PastOrderSummary = class {
 
 	get_condition_btn_map(after_submission) {
 		if (after_submission)
-			return [{ condition: true, visible_btns: ['طباعة الفاتورة', //'Email Receipt', 
+			return [{ condition: true, visible_btns: ['Print', //'Email Receipt', 
 		'New Order'] }];
 
 		return [
 			{ condition: this.doc.docstatus === 0, visible_btns: ['Edit Order', //'Delete Order'
 
 			] },
-			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['طباعة الفاتورة', //'Email Receipt'
+			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print', //'Email Receipt'
 
 			]},
-			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['طباعة الفاتورة', //'Email Receipt'
+			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print', //'Email Receipt'
 
 			]}
 		];
@@ -621,13 +620,13 @@ renting_services.PointOfRent.PastOrderSummary = class {
 	attach_totals_info(doc) {
 		this.$totals_container.html('');
 
-		const net_total_dom = this.get_net_total_html(doc);
-		const taxes_dom = this.get_taxes_html(doc);
+		// const net_total_dom = this.get_net_total_html(doc);
+		// const taxes_dom = this.get_taxes_html(doc);
 		const discount_dom = this.get_discount_html(doc);
 		const grand_total_dom = this.get_grand_total_html(doc);
 		const get_outstanding_dom = this.get_outstanding_html(doc);
-		this.$totals_container.append(net_total_dom);
-		this.$totals_container.append(taxes_dom);
+		// this.$totals_container.append(net_total_dom);
+		// this.$totals_container.append(taxes_dom);
 		this.$totals_container.append(discount_dom);
 		this.$totals_container.append(grand_total_dom);
 		this.$totals_container.append(get_outstanding_dom);
