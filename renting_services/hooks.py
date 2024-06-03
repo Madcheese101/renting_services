@@ -12,11 +12,12 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 app_include_css = ["renting_services.bundle.css"]
+# app_include_css = ["renting_services.bundle.css", "custom_print.bundle.css"]
 app_include_js = "renting_services.bundle.js"
 # app_include_js = "/assets/renting_services/js/renting_services.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/renting_services/css/renting_services.css"
+# web_include_css = "/assets/renting_services/css/custom_print.bundle.css"
 # web_include_js = "/assets/renting_services/js/renting_services.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -259,6 +260,7 @@ fixtures = [
                     "Branch-warehouse",
                     "Branch-custom_printers",
                     "Branch-custom_default_printer",
+                    "Branch-custom_print_server",
                     "Mode of Payment Account-custom_middleman_account"
                 ),
             ]
