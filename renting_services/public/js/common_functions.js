@@ -1,6 +1,8 @@
 frappe.provide("renting_services.item_process");
 frappe.provide("renting_services");
 
+import printease from 'printease'
+import jsrsasign from 'jsrsasign';
 
 renting_services.common = {
 	setup_renting_controller: function () {
@@ -324,30 +326,113 @@ renting_services.print_directly = async function(doctype, doc_name, print_format
     if(printing_info.message){
         const pdf_file = printing_info.message[0];
         const printer = printing_info.message[1]["printer"];
+        const print_server = printing_info.message[2];
         const page_size = {
             width: printing_info.message[1]["page_width"] || 210,
             height: printing_info.message[1]["page_height"] || 297
         }
-        frappe.ui.form.qz_connect()
-        .then(function () {
-            var config = qz.configs.create(printer,
-                {
-                    size: page_size, units: 'mm',
-                }
-            );
-            var data = [{
-                type: 'pixel',
-                format: 'pdf',
-                flavor: 'base64',
-                data: new Uint8Array(pdf_file)
-        }];
-            return qz.print(config, data);
-
-        })
-        .then(frappe.ui.form.qz_success)
-        .catch(err => {
-            frappe.ui.form.qz_fail(err);
-        });
+        // frappe.ui.form.qz_connect()
+        // .then(function () {
+        //     var config = qz.configs.create(printer,
+        //         {
+        //             size: page_size, units: 'mm',
+        //         }
+        //     );
+        //     var data = [{
+        //         type: 'pixel',
+        //         format: 'pdf',
+        //         flavor: 'base64',
+        //         data: new Uint8Array(pdf_file)
+        //         }];
+        //     return qz.print(config, data);
+        // })
+        // .then(frappe.ui.form.qz_success)
+        // .catch(err => {
+        //     frappe.ui.form.qz_fail(err);
+        // });
+        frappe.ui.form.qz_connect_host(print_server)
+            .then(function () {
+                var config = qz.configs.create(printer,
+                    {
+                        size: page_size, units: 'mm',
+                    }
+                );
+                var data = [{
+                    type: 'pixel',
+                    format: 'pdf',
+                    flavor: 'base64',
+                    data: new Uint8Array(pdf_file)
+            }];
+                return qz.print(config, data);
+    
+            })
+            .then(frappe.ui.form.qz_success)
+            .catch(err => {
+                frappe.ui.form.qz_fail(err);
+            }); 
     }
     
+}
+
+frappe.ui.form.qz_connect_host = function (host="localhost") {
+	return new Promise(function (resolve, reject) {
+        if(qz.websocket.isActive()){
+            resolve();
+        }
+        else{
+            frappe.show_alert({
+                message: __("Attempting Connection to QZ Tray..."),
+                indicator: "blue",
+            });
+            qz.websocket.connect(
+                {"host":host}
+            ).then(
+                () => {
+                    frappe.show_alert({
+                        message: __("Connected to QZ Tray!"),
+                        indicator: "green",
+                    });
+                    resolve();
+                },
+                function retry(err) {
+                }
+            );
+        }
+    });
+}
+
+frappe.ui.form.qz_init_ser = async function () {
+    await frappe.db.get_doc('QZ Tray Settings', undefined).then((qz_doc) => {
+        if(qz_doc.trusted_certificate != null && qz_doc.trusted_certificate != "" 
+            && qz_doc.private_certificate != "" && qz_doc.private_certificate != null){
+                
+                frappe.ui.form.qz_init().then(function(){
+                    if(qz.websocket.isActive()){
+                        resolve();
+                    }
+                    else{
+                        ///// QZ Certificate ///
+                        qz.security.setCertificatePromise(function(resolve, reject) {
+                            resolve(qz_doc.trusted_certificate);
+                        });
+                        qz.security.setSignaturePromise(function(toSign) {
+                            return function(resolve, reject) {
+                                try {
+                                    var pk = jsrsasign.KEYUTIL.getKey(qz_doc.private_certificate);
+                                    // var sig = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA512withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+                                    var sig = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA1withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+                                    sig.init(pk); 
+                                    sig.updateString(toSign);
+                                    var hex = sig.sign();
+                                    resolve(jsrsasign.stob64(jsrsasign.hextorstr(hex)));
+                                } catch (err) {
+                                    console.error(err);
+                                    reject(err);
+                                }
+                            };
+                        });
+                    }
+            });
+        }
+    });
 }

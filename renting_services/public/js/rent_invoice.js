@@ -116,7 +116,7 @@ erpnext.accounts.RentInvoiceController = class RentInvoiceController extends erp
 	refresh(doc, dt, dn) {
 		const me = this;
 		super.refresh(doc,dt, dn);
-		
+        frappe.ui.form.qz_init_ser();
 		this.frm.add_custom_button(
 			__('طباعة الفاتورة'),
 			// () => this.make_rent_payment_entry(),

@@ -1,5 +1,8 @@
+import base64
+import io
 import json
 
+import numpy as np
 import frappe
 from frappe import _
 from frappe.utils import (
@@ -17,9 +20,13 @@ from frappe.utils import (
 	parse_json,
 	today,
 )
+from frappe.utils.print_format import get_pdf
+from frappe.core.doctype.access_log.access_log import make_access_log
+
 from frappe.www.printview import validate_print_permission
 from frappe.translate import print_language
 from frappe.utils.pdf import prepare_options
+from PIL import Image, ImageDraw, ImageFont
 
 @frappe.whitelist()
 def update_child_ready_qty(parent_doctype, trans_items, 
@@ -113,8 +120,10 @@ def get_print_as_pdf(doctype, name, format=None, doc=None,
         frappe.throw("فرع المحل غير محدد للموظف")
     
     
-    letterhead_, default_printer = frappe.get_value("Branch", user_branch, ["letter_head","default_printer"])
+    letterhead_, default_printer, print_server = frappe.get_value("Branch", user_branch, ["letter_head","default_printer", "print_server"])
     
+    if not print_server:
+        print_server = "localhost"
     printing_settings = frappe.get_all("Branch Printers", 
                                       filters={"print_doctype": doctype,
                                                "print_format": format,
@@ -145,5 +154,5 @@ def get_print_as_pdf(doctype, name, format=None, doc=None,
             letterhead=letterhead, no_letterhead=no_letterhead,
             as_pdf=True, 
         )
-    return pdf_file, printer
+    return pdf_file, printer, print_server
 
