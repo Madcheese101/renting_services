@@ -207,7 +207,6 @@ def get_payment_entry(
 	pe.company = doc.company
 	pe.cost_center = doc.get("cost_center")
 	pe.posting_date = nowdate()
-	pe.mode_of_payment = doc.get("mode_of_payment")
 	pe.reference_date = reference_date
 	pe.reference_no = reference_no
 	pe.party_type = party_type
@@ -300,7 +299,7 @@ def get_payment_entry(
 	pe.setup_party_account_field()
 	pe.set_missing_values()
 	pe.set_missing_ref_details()
-
+	pe.set_amounts()
 	update_accounting_dimensions(pe, doc)
 
 	if party_account and bank:
