@@ -7,6 +7,7 @@ def cancel_pay_payment_entry(doc, method):
     payment_entries = frappe.get_all(
         "Payment Entry",
         filters={
+            "payment_type": "Pay",
             "reference_no": doc.name,
             "docstatus": 1
         },
