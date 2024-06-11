@@ -256,6 +256,7 @@ def make_sales_return(payments, source_name, target_doc=None):
         payment_doc.set_amounts()
         payment_doc.flags.ignore_permissions=True
         payment_doc.references = []
+        payment_doc.reference_no = return_invoice.name
         payment_doc.save()
         payment_doc.title += " (إرجاع للزبون)"
         payment_doc.save()

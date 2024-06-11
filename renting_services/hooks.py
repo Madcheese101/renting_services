@@ -136,9 +136,9 @@ doc_events = {
 	# 	"on_cancel": "method",
 	# 	"on_trash": "method"
 	# }
-    # "Sales Invoice": {
-	# 	"on_submit": "renting_services.doc_events.sales_invoice.proccess_change_rent"
-	# }
+    "Sales Invoice": {
+		"on_cancel": "renting_services.doc_events.sales_invoice.cancel_pay_payment_entry"
+	}
 }
 
 # Scheduled Tasks
