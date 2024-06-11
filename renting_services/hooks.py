@@ -65,6 +65,10 @@ doctype_js = {"Payment Entry" : "public/js/payment_entry.js",
 #	"methods": "renting_services.utils.jinja_methods",
 #	"filters": "renting_services.utils.jinja_filters"
 # }
+jinja = {
+    "methods":["renting_services.renting_services.page.renting_pos.renting_pos.load_customer_dashboard_info",
+               "erpnext.accounts.utils.get_balance_on"]
+}
 
 # Installation
 # ------------
@@ -164,7 +168,8 @@ scheduler_events = {
             "renting_services.renting_services.tasks.tasks.draft_invoice_check",
             "renting_services.renting_services.tasks.tasks.cancel_unconfirmed_rents"
         ]
-	}
+	},
+    "monthly":["renting_services.renting_services.tasks.tasks.check_year_old_unallocated_payments"]
 }
 # Testing
 # -------
@@ -262,7 +267,9 @@ fixtures = [
                     "Branch-custom_printers",
                     "Branch-custom_default_printer",
                     "Branch-custom_print_server",
-                    "Mode of Payment Account-custom_middleman_account"
+                    "Mode of Payment Account-custom_middleman_account",
+                    "Payment Entry-custom_payment_cleared",
+                    "Company-custom_default_advance_payment_clearance_account"
                 ),
             ]
         ]
