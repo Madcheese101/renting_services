@@ -328,7 +328,7 @@ renting_services.PointOfRent.PastOrderSummary = class {
 					var payments = values.payments;
 					var sum = payments.reduce((acc, curr) => acc + curr.base_amount, 0);
 					if (sum != (me.doc.total - me.doc.outstanding_amount)){
-						d.hide();
+						payments_dialog.hide();
 						frappe.throw(__('اجمالي قيمة الراجع يجب ان يساوي القيمة المدفوعة من قبل'));
 					}
 					frappe.dom.freeze();
