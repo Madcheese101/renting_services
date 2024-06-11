@@ -349,6 +349,7 @@ renting_services.PointOfRent.PastOrderSummary = class {
 					});
 					payments_dialog.hide();
 					frappe.dom.unfreeze();
+					me.reload_doc(me.doc.name);
 					frappe.show_alert({message:__('تم الإرجاع بنجاح'), indicator: 'green'});
 				}
 			});
