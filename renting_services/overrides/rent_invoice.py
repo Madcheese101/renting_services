@@ -23,6 +23,10 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import (
     set_pending_discount_loss,
 	get_reference_as_per_payment_terms
 )
+import erpnext
+from erpnext.accounts.party import get_party_account
+from erpnext.controllers.accounts_controller import (get_advance_journal_entries,
+													 get_common_query)
 
 class RentInvoice(SalesInvoice):    
     
@@ -148,6 +152,40 @@ class RentInvoice(SalesInvoice):
 				payment_doc.save()
 				payment_doc.submit()
 
+	def get_advance_entries(self, include_unallocated=True):
+		party_account = []
+		if self.doctype == "Sales Invoice":
+			party_type = "Customer"
+			party = self.customer
+			amount_field = "credit_in_account_currency"
+			order_field = "sales_order"
+			order_doctype = "Sales Order"
+			party_account.append(self.debit_to)
+		else:
+			party_type = "Supplier"
+			party = self.supplier
+			amount_field = "debit_in_account_currency"
+			order_field = "purchase_order"
+			order_doctype = "Purchase Order"
+			party_account.append(self.credit_to)
+
+		party_account.extend(
+			get_party_account(party_type, party=party, company=self.company, include_advance=True)
+		)
+
+		order_list = list(set(d.get(order_field) for d in self.get("items") if d.get(order_field)))
+
+		journal_entries = get_advance_journal_entries(
+			party_type, party, party_account, amount_field, order_doctype, order_list, include_unallocated
+		)
+
+		payment_entries = get_advance_payment_entries_for_regional(
+			party_type, party, party_account, order_doctype, order_list, include_unallocated
+		)
+
+		res = journal_entries + payment_entries
+
+		return res
 @frappe.whitelist()
 def get_payment_entry(
 	dt,
@@ -348,3 +386,59 @@ def set_paid_amount_and_received_amount(
 					paid_amount = received_amount * doc.get("conversion_rate", 1)
 
 	return paid_amount, received_amount
+
+@erpnext.allow_regional
+def get_advance_payment_entries_for_regional(*args, **kwargs):
+	return get_advance_payment_entries(*args, **kwargs)
+def get_advance_payment_entries(
+	party_type,
+	party,
+	party_account,
+	order_doctype,
+	order_list=None,
+	include_unallocated=True,
+	against_all_orders=False,
+	limit=None,
+	condition=None,
+):
+	payment_entries = []
+	payment_entry = frappe.qb.DocType("Payment Entry")
+
+	if order_list or against_all_orders:
+		q = get_common_query(
+			party_type,
+			party,
+			party_account,
+			limit,
+			condition,
+		)
+		payment_ref = frappe.qb.DocType("Payment Entry Reference")
+
+		q = q.inner_join(payment_ref).on(payment_entry.name == payment_ref.parent)
+		q = q.select(
+			(payment_ref.allocated_amount).as_("amount"),
+			(payment_ref.name).as_("reference_row"),
+			(payment_ref.reference_name).as_("against_order"),
+		)
+
+		q = q.where(payment_ref.reference_doctype == order_doctype)
+		if order_list:
+			q = q.where(payment_ref.reference_name.isin(order_list))
+
+		allocated = list(q.run(as_dict=True))
+		payment_entries += allocated
+	if include_unallocated:
+		q = get_common_query(
+			party_type,
+			party,
+			party_account,
+			limit,
+			condition,
+		)
+		q = q.select((payment_entry.unallocated_amount).as_("amount"))
+		q = q.where(payment_entry.unallocated_amount > 0)
+		q = q.where(payment_entry.payment_cleared == 0)
+
+		unallocated = list(q.run(as_dict=True))
+		payment_entries += unallocated
+	return payment_entries
