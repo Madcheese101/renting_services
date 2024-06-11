@@ -233,6 +233,8 @@ def make_sales_return(payments, source_name, target_doc=None):
     return_invoice.is_pos = 0
     return_invoice.update_stock = 0
     return_invoice.update_outstanding_for_self = 0
+    return_invoice.advances = []
+    return_invoice.rent_status = ""
     return_invoice.save()
     return_invoice.submit()
     frappe.db.set_value("Sales Invoice", source_name, "rent_status", "مرتجع")
