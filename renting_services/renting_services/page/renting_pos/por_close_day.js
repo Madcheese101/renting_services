@@ -1,3 +1,5 @@
+frappe.provide("renting_services");
+
 renting_services.PointOfRent.CloseDay = class {
 	constructor({ wrapper, settings, events }) {
 		this.wrapper = wrapper;
@@ -10,6 +12,7 @@ renting_services.PointOfRent.CloseDay = class {
 		this.company = settings.company;
 		this.currency = settings.currency;
 		this.cost_center = settings.cost_center;
+		this.letter_head = settings.letter_head;
 		this.init_component();
 	}
 
@@ -30,7 +33,9 @@ renting_services.PointOfRent.CloseDay = class {
 						<div class="btn btn-primary ellipsis transfer-balance-btn">${__('إغلاق اليوم')}</div>
 					</div>
 					<div class="accounts-container"></div>
+					<div class="text-center label">تقرير تحويلات الخزائن</div>
 					<div class="payment-entries-container"></div>
+					<div class="btn btn-primary ellipsis print-report-btn">${__('طباعة التقرير')}</div>
 				</div>
 			</section>`
 		);
@@ -38,6 +43,79 @@ renting_services.PointOfRent.CloseDay = class {
 		this.$component = this.wrapper.find('.close-day');
 		this.$close_day_container = this.$component.find('.close-day-container');
 		this.$upper_section = this.$close_day_container.find('.upper-section');
+		this.$payments_container = this.$close_day_container.find('.payment-entries-container');
+		this.$payments_table = new DataTable(this.$payments_container.get(0), {
+			columns: [
+				// mode_of_payment
+				{
+					name: 'طريقة الدفع',
+					id: 'mode_of_payment',
+					editable: false,
+					// resizable: false,
+					// sortable: false,
+					dropdown: false,
+				},
+				// posting_date
+				{
+					name: 'التاريخ',
+					id: 'posting_date',
+					editable: false,
+					// resizable: false,
+					// sortable: false,
+					dropdown: false,
+				},
+				//name
+				{
+					name: 'رقم الايصال',
+					id: 'name',
+					editable: false,
+					// resizable: false,
+					sortable: false,
+					dropdown: false,
+				},
+				// paid_amount
+				{
+					name: 'الرصيد',
+					id: 'paid_amount',
+					editable: false,
+					// resizable: false,
+					// sortable: false,
+					dropdown: false,
+					format: (value) => {
+						return format_currency(value, this.currency, 1);
+					}
+				},
+				// received_amount
+				{
+					name: 'المدفوع',
+					id: 'received_amount',
+					editable: false,
+					// resizable: false,
+					// sortable: false,
+					dropdown: false,
+					format: (value) => {
+						return format_currency(value, this.currency, 1);
+					}
+				},
+				// diff_amount
+				{
+				name: 'الفرق',
+				id: 'diff_amount',
+				editable: false,
+				// resizable: false,
+				// sortable: false,
+				dropdown: false,
+				format: (value) => {
+					return format_currency(value, this.currency, 1);
+				}
+				}
+			],
+			data: [],
+			serialNoColumn: false,
+			layout: "fluid",
+			noDataMessage: "لا توجد بيانات",
+			treeView:true
+		});
 	}
 
 	make_fields() {
@@ -106,50 +184,15 @@ renting_services.PointOfRent.CloseDay = class {
 				return this.items_datatable.df.data;
 			},
 		});
-
-		this.payment_entries_datatable = frappe.ui.form.make_control({
-			df: {
-				label: 'تحويلات الخزائن لخزينة الوسيط',
-				fieldname: 'payment_entries',
-				fieldtype: 'Table',
-				cannot_add_rows: true,
-				in_place_edit: true,
-				data: [],
-				fields: [
-					{ fieldname: 'name', 
-						fieldtype: 'Link', options: "Payment Entry",
-						label: 'رقم الإيصال', in_list_view: 1,
-						read_only: 1},
-					{ fieldname: 'mode_of_payment', 
-						fieldtype: 'Data', 
-						label: 'طريقة الدفع', in_list_view: 1,
-						read_only: 1},
-					{ fieldname: 'posting_date', 
-						fieldtype: 'Date', label: 'التاريخ', in_list_view: 1,
-						read_only: 1},
-					{ fieldname: 'paid_amount',
-						fieldtype: 'Currency', label: 'الرصيد', in_list_view: 1,
-						read_only: 1 ,precision: 1},
-					{ fieldname: 'received_amount', 
-						fieldtype: 'Currency', label: 'المدفوع', in_list_view: 1,
-						precision:1, read_only: 1},
-					{ fieldname: 'diff_amount', 
-						fieldtype: 'Currency', label: 'الفرق', in_list_view: 1,
-						read_only: 1, precision:1 },
-				],
-			},
-			parent: this.$close_day_container.find('.payment-entries-container'),
-			render_input: true,
-			get_data: () => {
-				return this.payment_entries_datatable.df.data;
-			},
-		});
 	}
 
 	bind_events() {
 		const me = this;
 		this.$close_day_container.on('click', '.transfer-balance-btn', () => {
 			this.close_day();
+		});
+		this.$close_day_container.on('click', '.print-report-btn', () => {
+			this.exec_print_report();
 		});
 		this.date_field.$input.on('change', (value) => {
 			let new_val = value.target.value
@@ -185,6 +228,7 @@ renting_services.PointOfRent.CloseDay = class {
 		// frappe.set_route('query-report', 'Close Day', {from_date:this.date_value, to_date:this.date_value});
 	}
 	refresh_list(date) {
+		// get accounts balances
 		frappe.call({
 			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_accounts_balances",
 			freeze: true,
@@ -198,18 +242,49 @@ renting_services.PointOfRent.CloseDay = class {
 				this.items_datatable.refresh();
 			}
 		});
+		// get payment entries
 		frappe.call({
-			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_transfer_payments",
+			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_data",
 			freeze: true,
 			args: { 
 				mode_of_payments: this.payments,
 				date: date,
 			},
 			callback: (response) => {
-				this.payment_entries_datatable.df["data"] = response.message;
-				this.payment_entries_datatable.refresh();
+				if(response.message){
+					this.data = response.message;
+					this.$payments_table.refresh(response.message);
+				}
+				else{
+					this.data = [];
+					this.$payments_table.refresh([]);
+				}
 			}
 		});
+	}
+
+	async exec_print_report() {
+		const letter_head = this.letter_head;
+		const defaults = renting_services.get_boot_defaults();
+		defaults.title = `تقرير تحويل الخزائن - ${this.date_value}`;
+		defaults.company = this.company;
+
+		// get custom template html
+		const content_html = frappe.render_template("close_day_template", {
+			data: this.data,
+			filters: {from_date: this.date_value, to_date: this.date_value},
+		});
+
+		frappe.call({
+			method:"renting_services.utils.utils.report_to_pdf",
+			args: {content_html,defaults,letter_head},
+			callback: (response) => {
+				if(response.message){
+					const result = r.message;
+					renting_services.print_report(result.pdf_file, result.printer, result.print_server);
+				}
+			}
+		})
 	}
 
 	get_customers_html(customer) {

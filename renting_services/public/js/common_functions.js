@@ -374,6 +374,51 @@ renting_services.print_directly = async function(doctype, doc_name, print_format
     
 }
 
+/**
+ * Prints a PDF file using QZ Tray.
+ * 
+ * @param {ArrayBuffer} pdf - The PDF file to print.
+ * @param {Object} printer_settings - The printer settings for the print job.
+ * @param {string} [print_server="localhost"] - The hostname of the print server.
+ */
+renting_services.print_report = async function(pdf, printer_settings, print_server="localhost") {
+    // Check if PDF file is provided
+    if(pdf){
+        // Extract printer settings
+        const printer = printer_settings["printer"];
+        const page_size = {
+            width: printer_settings["page_width"] || 210,
+            height: printer_settings["page_height"] || 297
+        }
+        // Connect to print server
+        frappe.ui.form.qz_connect_host(print_server)
+            .then(function () {
+                // Create print configuration
+                var config = qz.configs.create(printer,
+                    {
+                        size: page_size, units: 'mm',
+                    }
+                );
+                // Prepare data to print
+                var data = [{
+                    type: 'pixel',
+                    format: 'pdf',
+                    flavor: 'base64',
+                    data: new Uint8Array(pdf)
+                }];
+                // Print the data
+                return qz.print(config, data);
+    
+            })
+            .then(frappe.ui.form.qz_success)
+            .catch(err => {
+                // Handle print error
+                frappe.ui.form.qz_fail(err);
+            }); 
+    }
+    
+}
+
 frappe.ui.form.qz_connect_host = function (host="localhost") {
 	return new Promise(function (resolve, reject) {
         if(qz.websocket.isActive()){
@@ -435,4 +480,25 @@ frappe.ui.form.qz_init_ser = async function () {
             });
         }
     });
+}
+
+/**
+ * Retrieves the boot defaults from the Frappe object. such as the base URL, language, and print CSS.
+ * @returns {Object} A dict containing the boot defaults.
+ */
+renting_services.get_boot_defaults = function(){
+    // Return an object containing the boot defaults.
+    // The boot defaults include the base URL, language, print CSS,
+    // and layout direction.
+    return {
+        // The base URL of the Frappe application.
+        base_url: frappe.urllib.get_base_url(),
+        // The language set in the Frappe boot.
+        lang: frappe.boot.lang,
+        // The print CSS set in the Frappe boot.
+        print_css: frappe.boot.print_css,
+        // The layout direction, either "rtl" for right-to-left or "ltr"
+        // for left-to-right.
+        layout_direction: frappe.utils.is_rtl() ? "rtl" : "ltr",
+    }
 }

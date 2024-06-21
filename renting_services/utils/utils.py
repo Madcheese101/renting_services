@@ -156,3 +156,33 @@ def get_print_as_pdf(doctype, name, format=None, doc=None,
         )
     return pdf_file, printer, print_server
 
+@frappe.whitelist()
+def create_bitmap_from_text(text="", font_size=25):
+    path="/assets/renting_services/output.png"
+    output_path=f".{path}"
+    # Create an image with a white background
+    width = 400
+    height = 50
+    img = Image.new("RGB", (width, height), color="white")
+    draw = ImageDraw.Draw(img)
+
+    # Load a font (you can specify a different font path)
+    fontFile = "./assets/renting_services/Sahel.ttf"
+    font = ImageFont.truetype(fontFile, font_size)
+    multiline_text = """يارا 6389 مقاس 80×150 بيج/بيج"""
+
+    draw.multiline_text((0, 0), multiline_text, fill="black", 
+                        font=font, spacing=4, align="left",
+                        direction="rtl", language="ar")
+
+    img.save(output_path)
+
+    return (frappe.utils.get_url()+path), {"width": width, "height": height}
+@frappe.whitelist()
+def get_base64_img(path="./assets/renting_services/js/output.png"):
+    import base64
+    with open(path, 'rb') as image_file:
+        
+        base64_bytes = base64.b64encode(image_file.read())
+        # frappe.msgprint(base64_bytes)
+        return  base64_bytes #base64_bytes

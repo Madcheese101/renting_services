@@ -1,0 +1,104 @@
+{%
+	var ptotal = 0;
+	var ptotal_sent = 0;
+	var ptotal_diff = 0;
+
+    var base_paid_amount_total = 0.0;
+    var received_amount_total = 0.0;
+    var diff_total = 0.0;
+%}
+
+<h2 class="text-center">{%= __("تقرير المبيعات") %}</h2>
+
+<h4 class="text-center">
+    {% if (filters.from_date == filters.to_date) { %}
+        {%= (" ليوم: ") %}{%= filters.from_date %}
+	{% } else if (filters.from_date && filters.to_date) { %}
+        {%= (" من تاريخ: ") %}{%= filters.from_date %}{%= ("   ") %}{%= (" إلى تاريخ: ") %}{%= filters.from_date %}
+	{% } else if (filters.from_date) { %}
+		 {%= (" من تاريخ: ") %}{%= filters.from_date %}{%= ("   ") %}{%= (" إلى تاريخ اليوم ") %}
+    {% } %}
+</h4>
+</br>
+</br>
+
+{% for(var i=0, l=data.length; i<l; i++) { %}		
+    {% if (data[i].has_value) { %}
+        {% if (i>0) { %}
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(base_paid_amount_total,0,2) %}</b></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(received_amount_total,0,2) %}</b></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(diff_total,0,2) %}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        {% } %}
+        {% (ptotal = ptotal + data[i].paid_amount) %}
+        {% (ptotal_sent = ptotal_sent + data[i].received_amount) %}
+        {% (ptotal_diff = ptotal_diff + data[i].diff_amount) %}
+        
+        {% (base_paid_amount_total = data[i].paid_amount) %}
+        {% (received_amount_total = data[i].received_amount) %}
+        {% (diff_total = data[i].diff_amount) %}
+
+        <table class="table table-bordered" style="text-align: center">
+            <thead>
+                <tr>
+                    <th style="text-align: center" colspan="6">
+                        <h4><strong>{%= (data[i].mode_of_payment) %}</strong></h4>
+                    </th>
+                </tr>
+                <tr>
+                    <th style="width: 15%">{%= __("التاريخ") %}</th>
+                    <th style="width: 25%">{%= __("الرقم الإشاري") %}</th>
+                    <th style="width: 15%">{%= __("المبلغ المحول") %}</th>
+                    <th style="width: 18%">{%= __("(الواقع) المبلغ المسلم") %}</th>
+                    <th style="width: 18%">{%= __("الفروقات") %}</th>
+                </tr>
+            </thead>
+            <tbody>
+        {% if (i==l-1) { %}
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(base_paid_amount_total,0,2) %}</b></td>
+                    <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(received_amount_total,0,2) %}</b></td>
+                    <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(diff_total,0,2) %}</b></td>
+                </tr>
+            </tbody>
+        </table>
+        {% } %}
+    {% } else if (!data[i].has_value && data[i].mode_of_payment) { %}
+        <tr>
+            <td>{%= data[i].posting_date %}</td>
+            <td>{%= data[i].name %}</td>
+            <td>{%= format_currency(data[i].paid_amount,0,2) %}</td>
+            <td>{%= format_currency(data[i].received_amount,0,2) %}</td>
+            <td>{%= format_currency(data[i].diff_amount,0,2) %}</td>
+        </tr>
+        {% if (i==l-1) { %}
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(base_paid_amount_total,0,2) %}</b></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(received_amount_total,0,2) %}</b></td>
+                        <td style="background:#eee; font-size: 13px;"><b>{%= format_currency(diff_total,0,2) %}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        {% } %}
+
+    {% } %}
+{% } %}
+
+
+<table class="table table-bordered" style="text-align: center">
+    <thead>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="background:#eee; font-size: 15px;"><b>{%= "إجمالي المبلغ المحول:  " %}  {%= format_currency(ptotal,0,2) %}</b></td>
+            <td style="background:#eee; font-size: 15px;"><b>{%= "(الواقع) إجمالي المسلم:  " %}  {%= format_currency(ptotal_sent,0,2) %}</b></td>
+            <td style="background:#eee; font-size: 15px;"><b>{%= "إجمالي الفروقات:  " %}  {%= format_currency(ptotal_diff,0,2) %}</b></td>
+        </tr>
+    </tbody>
+</table>

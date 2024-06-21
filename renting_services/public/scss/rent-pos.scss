@@ -352,6 +352,12 @@
     padding: var(--padding-lg);
     // padding-top: 0px;
   }
+  .point-of-sale-app > .close-day > .close-day-container > .label{
+    justify-content: center;
+    font-weight: 500;
+    font-size: x-large;
+  }
+
   .point-of-sale-app > .close-day > .close-day-container > .upper-section {
     display: flex;
     justify-content: space-between;
@@ -360,8 +366,15 @@
     height: 30px;
   }
 
-  .point-of-sale-app > .close-day > .close-day-container > .accounts-container > .datatable {
+  .point-of-sale-app > .close-day > .close-day-container > .accounts-container > .datatable,
+  .point-of-sale-app > .close-day > .close-day-container > .payment-entries-container > .datatable {
     border-radius: var(--border-radius-md);
     background-color: var(--control-bg);
     margin: var(--margin-md) 0px;
+  }
+  .point-of-sale-app > .close-day > .close-day-container > .payment-entries-container {
+    max-height: 250px;
+  }
+  .point-of-sale-app > .close-day > .close-day-container > .payment-entries-container > .datatable{
+    max-height: 250px;
   }
