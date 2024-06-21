@@ -203,7 +203,7 @@ def report_to_pdf(content_html, defaults, letter_head = None):
         printer = {"printer": default_printer, "page_width":None, "page_height":None}
     else:
         # Throw an exception if no default printer is specified
-        frappe.throw(f"لم يتم تحديد الطابعة الإفتراضية للمحل أو تحديد الطابعة لقالب الطباعة : {format}")
+        frappe.throw(f"لم يتم تحديد الطابعة الإفتراضية للمحل")
     
     # Set letterhead details if specified
     if letter_head:
