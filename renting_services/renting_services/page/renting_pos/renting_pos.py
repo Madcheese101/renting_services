@@ -538,3 +538,55 @@ def get_transfer_payments(mode_of_payments, date):
                "docstatus": 1}
     
     return frappe.get_all("Payment Entry", fields=fields, filters=fitlers)
+@frappe.whitelist()
+def get_close_day_report_data(mode_of_payments, date):
+
+	payment_modes = json.loads(mode_of_payments)
+	data = []
+	# loop through mode of payments and add them to the result list as heads
+	for payment in payment_modes:
+		head = frappe.db.get_list('Payment Entry',
+			fields=['mode_of_payment',
+				'(sum(paid_amount)) as paid_amount',
+				'(sum(received_amount)) as received_amount', 
+				('(sum(received_amount)-sum(paid_amount)) as diff_amount'),
+				'(0) as indent', '(1) as has_value'],		
+			filters={
+				'status':"Submitted",
+				'mode_of_payment':payment,
+				'posting_date':["between", (date,date)],
+				"payment_type": "Internal Transfer"}
+			,order_by='posting_date desc'
+			,group_by="mode_of_payment")
+		if(head):
+			data.extend(head)
+		else:
+			data.append({'mode_of_payment': payment,"paid_amount":0,"received_amount":0
+		,"diff_amount":0,'indent':0, 'has_value': True})
+
+
+		# get the data for each mode of payment
+		node_data = frappe.db.get_list('Payment Entry',
+			fields=[
+                'mode_of_payment',
+                'name',
+                'paid_from_account_balance',
+                'paid_amount',
+                'received_amount', 
+                ('(received_amount-paid_amount) as diff_amount'),
+                'posting_date', 
+                '(1) as indent', 
+                '(0) as has_value'
+            ],		
+			filters={
+                'status':"Submitted",
+                'mode_of_payment':payment,
+                'posting_date':["between", (date,date)],
+                "payment_type": "Internal Transfer"
+            }
+			,order_by='posting_date desc')
+
+		data.extend(node_data)
+
+	#return data list
+	return data

@@ -244,7 +244,7 @@ renting_services.PointOfRent.CloseDay = class {
 		});
 		// get payment entries
 		frappe.call({
-			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_data",
+			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_close_day_report_data",
 			freeze: true,
 			args: { 
 				mode_of_payments: this.payments,
