@@ -155,7 +155,90 @@ def get_print_as_pdf(doctype, name, format=None, doc=None,
             as_pdf=True, 
         )
     return pdf_file, printer, print_server
+@frappe.whitelist()
+def report_to_pdf(content_html, defaults, letter_head = None):
+    """
+    Convert HTML content to PDF.
+    
+    Args:
+        content_html (str): HTML content to be converted to PDF.
+        defaults (str): JSON string containing default settings for the PDF.
+        letter_head (str, optional): Name of the letterhead to be used for the PDF. Defaults to None.
+    
+    Returns:
+        dict: Dictionary containing the generated PDF file, printer details, and print server.
+    """
+    
+    pdf_file = None
+    
+    # Set default print settings
+    print_settings = {
+        "repeat_header_footer": 1,
+        "with_letterhead": 1,
+        "with_letter_head": 1,
+        "letter_head": {},
+        "orientation": "Portrait",
+        "pick_columns": 0,
+    }
+    
+    # Parse default settings from JSON string
+    defaults = json.loads(defaults)
 
+    # Get branch associated with the user
+    user_branch = frappe.get_value("Employee", {"user_id": frappe.session.user}, ["branch"]) or None
+
+    # Throw an exception if no branch is associated with the user
+    if not user_branch:
+        frappe.throw("فرع المحل غير محدد للموظف")
+
+    # Get default printer and print server for the branch
+    default_printer, print_server = frappe.get_value("Branch", user_branch, ["default_printer","print_server"])
+    
+    # Set default print server if not specified
+    if not print_server:
+        print_server = "localhost"
+        
+    # Set printer details if default printer is specified
+    if default_printer:
+        printer = {"printer": default_printer, "page_width":None, "page_height":None}
+    else:
+        # Throw an exception if no default printer is specified
+        frappe.throw(f"لم يتم تحديد الطابعة الإفتراضية للمحل أو تحديد الطابعة لقالب الطباعة : {format}")
+    
+    # Set letterhead details if specified
+    if letter_head:
+        header, footer = frappe.db.get_value('Letter Head', letter_head, ['content', 'footer'])
+        print_settings["letter_head"] = {"header": header, "footer": footer}
+
+    # Set template variables for rendering the PDF template
+    template_vars = {
+        "print_settings": print_settings,
+        "content": content_html, # insert custom template html
+        "title": _(defaults["title"]),
+        "base_url": defaults["base_url"],
+        "print_css": defaults["print_css"],
+        "layout_direction": defaults["layout_direction"],
+        "lang": defaults["lang"],
+        "landscape": 0,
+        "columns": [],
+        "can_use_smaller_font": 1,
+    }
+    
+    # Render the PDF template with the specified template variables
+    html = frappe.render_template("templates/report_template.html", template_vars)
+
+    # Log the generated PDF file
+    make_access_log(file_type="PDF", method="PDF", page=html)
+
+    # Generate the PDF file
+    pdf_file = get_pdf(html, {"orientation": print_settings["orientation"]})
+
+    # Return the generated PDF file, printer details, and print server
+    return {
+        "pdf_file": pdf_file, 
+        "printer": printer, 
+        "print_server": print_server
+    }
 @frappe.whitelist()
 def create_bitmap_from_text(text="", font_size=25):
     path="/assets/renting_services/output.png"
