@@ -474,7 +474,7 @@ renting_services.PointOfRent.Controller = class {
 
 	async validate_and_unlink_payments(){
 		if(!this.frm.doc.original_invoice){
-			var rent_exists = await this.check_availability();
+			var rent_exists = await this.validate_availability();
 			if (rent_exists.message.length > 0){
 				const items = rent_exists.message.map(item=> item.item_name);
 				frappe.throw( `يوجد حجز في الأصناف الأتية <br> ${items}`);
@@ -572,7 +572,6 @@ renting_services.PointOfRent.Controller = class {
 	submit_inv(payments){
 		this.frm.savesubmit()
 			.then(async (r) => {
-				console.log(payments);
 				if(payments){
 					await this.frm.call({
 								method: "change_rent",
@@ -599,18 +598,18 @@ renting_services.PointOfRent.Controller = class {
 		this.validate_and_unlink_payments();
 		this.get_advances_and_submit();
 	}
-	async check_availability(){
+	async validate_availability(){
 		var expected_after = this.item_selector.after_date;
 		var expected_before = this.item_selector.before_date;
 		var items = this.frm.doc.items
 			.filter(item => !this.items_list.includes(item.item_code))
-			.map(item => item.item_code);
+			.map(item => item.serial_no);
 
 		return frappe.call({
-			method: "renting_services.renting_services.page.renting_pos.renting_pos.check_availability",
+			method: "renting_services.renting_services.page.renting_pos.renting_pos.validate_availability",
 			args: { "before_date": expected_before,
 					"after_date": expected_after,
-					"item_code": items },
+					"serials": items },
 		});
 	}
 
@@ -723,7 +722,7 @@ renting_services.PointOfRent.Controller = class {
 				// 	await this.check_stock_availability(item_row, qty_needed, warehouse);
 				// }
 
-				if (this.is_current_item_being_edited(item_row) || from_selector) {
+				if (this.is_current_item_being_edited(item_row) || from_selector && field !== 'serial_no') {
 					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
 					this.update_cart_html(item_row);
 				}
@@ -743,7 +742,8 @@ renting_services.PointOfRent.Controller = class {
 					};
 
 				if (serial_no) {
-					await this.check_serial_no_availablilty(item_code, warehouse, serial_no);
+					// await this.check_serial_no_availablilty(item_code, warehouse, serial_no);
+					new_item["use_serial_batch_fields"] = 1;
 					new_item['serial_no'] = serial_no;
 				}
 
@@ -794,20 +794,21 @@ renting_services.PointOfRent.Controller = class {
 		frappe.utils.play_sound("error");
 	}
 
-	get_item_from_frm({ name, item_code, batch_no, uom, rate }) {
+	get_item_from_frm({ name, item_code, batch_no, uom, rate, serial_no }) {
 		let item_row = null;
 		if (name) {
 			item_row = this.frm.doc.items.find(i => i.name == name);
 		} else {
 			// if item is clicked twice from item selector
-			// then "item_code, batch_no, uom, rate" will help in getting the exact item
+			// then "item_code, batch_no, uom, rate, serial_no" will help in getting the exact item
 			// to increase the qty by one
 			const has_batch_no = batch_no;
 			item_row = this.frm.doc.items.find(
 				i => i.item_code === item_code
 					&& (!has_batch_no || (has_batch_no && i.batch_no === batch_no))
 					&& (i.uom === uom)
-					&& (i.rate == rate)
+					&& (i.rate === rate)
+					&& (i.serial_no === serial_no)
 			);
 		}
 
@@ -891,7 +892,6 @@ renting_services.PointOfRent.Controller = class {
 
 	get_available_stock(item_code, warehouse) {
 		const me = this;
-		
 		return frappe.call({
 			method: "erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability",
 			args: {

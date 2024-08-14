@@ -5,7 +5,7 @@ from pypika import Criterion
 from frappe.query_builder import DocType
 
 from erpnext.stock.utils import scan_barcode
-from frappe.utils import get_fullname, cint, flt
+from frappe.utils import get_fullname, cint, flt, add_to_date
 from frappe.utils.nestedset import get_root_of
 from erpnext.accounts.utils import get_balance_on
 
@@ -27,36 +27,102 @@ def get_pos_profile():
 def check_availability(before_date, after_date, item_code):
     items_doc = DocType("Sales Invoice Item")
     sales_doc = DocType("Sales Invoice")
-    items = json.loads(item_code)
-    result = (
+    serials = frappe.get_all("Serial No", filters={"item_code": item_code}, pluck="name")
+    final_result = []
+    db_result = (
     frappe.qb
         .from_(sales_doc)
         .from_(items_doc)
-        .select(sales_doc.name, sales_doc.delivery_date,sales_doc.return_date, items_doc.item_name)
+        .select(
+            sales_doc.name, 
+            sales_doc.delivery_date, 
+            sales_doc.return_date, 
+            items_doc.item_name,
+            items_doc.serial_no
+        )
         .where(items_doc.parent == sales_doc.name)
-        .where(items_doc.item_code.isin(items) )
+        .where(items_doc.item_code == item_code)
         .where(sales_doc.docstatus == 1)
-        # .where(sales_doc.paid_amount > 0)
         .where(sales_doc.delivery_date[before_date:after_date])
+        # .where(sales_doc.paid_amount > 0)
     ).run(as_dict=True)
+
+    if serials:
+        db_result_dict = {i["serial_no"]: i for i in db_result}
+        for serial in serials:
+            if serial in db_result_dict.keys():
+                db_result_dict[serial]["avialable_status"] = False
+                db_result_dict[serial]["add_to_cart"] = None
+                db_result_dict[serial]["before_date"] = add_to_date(db_result_dict[serial]["delivery_date"], days=-1)
+                final_result.append(db_result_dict[serial])
+            else:
+                final_result.append({"serial_no": serial,"add_to_cart":serial, "avialable_status": True})
+    elif db_result:
+        temp_dic = {**db_result[0], 
+                    "avialable_status": False, 
+                    "before_date": add_to_date(db_result[0]["delivery_date"], days=-1),
+                    "add_to_cart": None}
+        final_result.append(temp_dic)
+    else:
+        final_result.append({"avialable_status": True, "add_to_cart": item_code})
+    
+    return final_result
+
+@frappe.whitelist()
+def validate_availability(before_date, after_date,serials):
+    serial_nos = json.loads(serials)
+    sales_items_doc = DocType("Sales Invoice Item")
+    sales_doc = DocType("Sales Invoice")
+    query = (
+        frappe.qb
+            .from_(sales_doc)
+            .from_(sales_items_doc)
+            .select(
+                sales_doc.name, 
+                sales_doc.delivery_date,
+                sales_doc.return_date, 
+                sales_items_doc.item_name,
+                sales_items_doc.serial_no
+            )
+            .where(sales_items_doc.parent == sales_doc.name)
+            .where(sales_doc.docstatus == 1)
+            .where(sales_items_doc.serial_no.isin(serial_nos))
+            # .where(sales_doc.paid_amount > 0)
+            .where(sales_doc.delivery_date[before_date:after_date])
+    )
+    result = query.run(as_dict=True)
     return result
 
 @frappe.whitelist()
 def get_available_products(pos_profile, before_date, after_date):
     items_doc = DocType("Sales Invoice Item")
     sales_doc = DocType("Sales Invoice")
-    result = (
-    frappe.qb
-        .from_(items_doc)
-        .from_(sales_doc)
-        .select(items_doc.item_code)
-        .where(items_doc.parent == sales_doc.name)
-        .where(sales_doc.docstatus == 1)
-        .where(sales_doc.pos_profile == pos_profile)
-        .where(sales_doc.rent_status != "غير مؤكد")
-        .where(sales_doc.delivery_date[before_date:after_date])
-    )
-    return result.run(pluck="item_code")
+    no_serial_items = (
+        frappe.qb
+            .from_(items_doc)
+            .from_(sales_doc)
+            .select(items_doc.item_code)
+            .where(items_doc.parent == sales_doc.name)
+            .where(sales_doc.docstatus == 1)
+            .where(sales_doc.pos_profile == pos_profile)
+            .where(sales_doc.rent_status != "غير مؤكد")
+            .where(items_doc.use_serial_batch_fields == 0)
+            .where(sales_doc.delivery_date[before_date:after_date])
+    ).run(pluck="item_code")
+
+    serial_items = (
+        frappe.qb
+            .from_(items_doc)
+            .from_(sales_doc)
+            .select(items_doc.serial_no)
+            .where(items_doc.parent == sales_doc.name)
+            .where(sales_doc.docstatus == 1)
+            .where(sales_doc.pos_profile == pos_profile)
+            .where(sales_doc.rent_status != "غير مؤكد")
+            .where(items_doc.serial_no != "")
+            .where(sales_doc.delivery_date[before_date:after_date])
+    ).run(pluck="serial_no")
+    return no_serial_items, serial_items
 
 @frappe.whitelist()
 def get_past_order_list(search_term, pos_profile, limit=50):
@@ -349,6 +415,7 @@ def get_items(start, page_length, price_list,
     )
 
     result = []
+    serial_items = []
 
     if search_term:
         result = search_by_term(search_term, warehouse, price_list) or []
@@ -373,6 +440,7 @@ def get_items(start, page_length, price_list,
                 items_doc.description,
                 items_doc.stock_uom,
                 items_doc.is_stock_item,
+                items_doc.has_serial_no,
                 (items_doc.image).as_("item_image"))
         .where(items_doc.disabled == 0)
         .where(items_doc.has_variants == 0)
@@ -382,8 +450,8 @@ def get_items(start, page_length, price_list,
         .orderby(items_doc.name)
     )
     if int(no_rented) == 1 :
-        rented = get_available_products(pos_profile, before_date, after_date)
-        if rented: query = query.where((items_doc.name).notin(rented))
+        no_serial_items, serial_items = get_available_products(pos_profile, before_date, after_date)
+        if no_serial_items: query = query.where((items_doc.name).notin(no_serial_items))
 
     if hide_unavailable_items:
         query = (query.from_(bin_doc)
@@ -407,7 +475,6 @@ def get_items(start, page_length, price_list,
             page_length=cint(page_length)))
     
     items_data = query.run(as_dict=1)
-
     if items_data:
         items = [d.item_code for d in items_data]
         
@@ -417,15 +484,23 @@ def get_items(start, page_length, price_list,
             filters={"price_list": price_list, "item_code": ["in", items]},
         )
 
-        item_prices = {}
-        for d in item_prices_data:
-            item_prices[d.item_code] = d
-
+        item_prices = {d.item_code: d for d in item_prices_data}
+            
         for item in items_data:
             item_code = item.item_code
+            has_serial_no = item.has_serial_no
+
+            if serial_items and has_serial_no:
+                available_serials = frappe.get_all("Serial No", 
+                                                filters={
+                                                    "item_code": item_code,
+                                                    "serial_no": ["not in", serial_items]},
+                                                    pluck="serial_no")
+                if not available_serials:
+                    continue
+
             item_price = item_prices.get(item_code) or {}
             item_stock_qty, is_stock_item = get_stock_availability(item_code, warehouse)
-
             row = {}
             row.update(item)
             row.update(

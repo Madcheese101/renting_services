@@ -39,10 +39,10 @@
 }
 
 .point-of-sale-app > .item-details-container > .calendar-container {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    -moz-column-gap: var(--padding-md);
-    column-gap: var(--padding-md);
+    // display: grid;
+    // grid-template-columns: repeat(2, minmax(0, 1fr));
+    // -moz-column-gap: var(--padding-md);
+    // column-gap: var(--padding-md);
 }
 
 .point-of-sale-app > .item-details-container > .calendar-container > .add-to-cart{
@@ -75,7 +75,7 @@
 .point-of-sale-app > .item-details-container > .calendar-container > .ok-pill, .no-pill {
     height: 30px;
     align-self: center;
-    margin-top: 15px;
+    // margin-top: 15px;
 }
 
 .point-of-sale-app > .past-order-summary > .invoice-summary-wrapper > .abs-container > .items-container {
@@ -377,4 +377,14 @@
   }
   .point-of-sale-app > .close-day > .close-day-container > .payment-entries-container > .datatable{
     max-height: 250px;
+  }
+
+  .add-serial-to-cart:hover {
+    background-color: #62ce76;
+  }
+  .add-serial-to-cart {
+      border-radius: var(--border-radius-sm);
+      text-align: center;
+      background-color: #24ae3d;
+      color: var(--neutral);
   }

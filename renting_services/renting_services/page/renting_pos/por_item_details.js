@@ -57,6 +57,80 @@ renting_services.PointOfRent.ItemDetails = class {
 		this.$form_container = this.$component.find('.form-container');
 		this.$dicount_section = this.$component.find('.discount-section');
 		this.$calendar_container = this.$component.find('.calendar-container');
+
+		let button_formatter = (value) => {
+			if (value) {
+				return `<div class="add-serial-to-cart" data-value="${value}">اضافة للسلة</div>`;
+			}else{ return "";}
+		}
+		let status_formatter = (value) => {
+			if (value) {
+				return `<span class="indicator-pill whitespace-nowrap green ok-pill">${__('متوفر')}</span>`;
+			}else{ 
+				return `<span class="indicator-pill whitespace-nowrap red no-pill">${__('غير متوفر')}</span>`;}
+		}
+		const columns = [
+			// docname
+			{
+				name: 'رقم القطعة',
+				id: 'serial_no',
+				editable: false,
+				// resizable: false,
+				sortable: false,
+				dropdown: false,
+				
+			},
+			// posting_date
+			{
+				name: 'تاريخ الحجز',
+				id: 'before_date',
+				editable: false,
+				// resizable: false,
+				sortable: false,
+				dropdown: false,
+			},
+			{
+				name: 'تاريخ الإستلام',
+				id: 'delivery_date',
+				editable: false,
+				sortable: false,
+				dropdown: false,
+			},
+			{
+				name: 'تاريخ الإرجاع',
+				id: 'return_date',
+				editable: false,
+				sortable: false,
+				dropdown: false,
+			},
+
+			// status
+			{
+				name: 'الحالة',
+				id: 'avialable_status',
+				editable: false,
+				// resizable: false,
+				dropdown: false,
+				format: status_formatter
+			},
+			// print_btn
+			{
+				name: ' ',
+				id: 'add_to_cart',
+				editable: false,
+				// resizable: false,
+				dropdown: false,
+				format: button_formatter
+			},
+		]
+		this.$avialability_datatable = new DataTable(this.$calendar_container.get(0), {
+			columns: columns,
+			data: [],
+			serialNoColumn: false,
+			layout: "ratio",
+			noDataMessage: "لا توجد بيانات",
+			treeView:true
+		});
 	}
 
 	compare_with_current_item(item) {
@@ -193,7 +267,9 @@ renting_services.PointOfRent.ItemDetails = class {
 			const field_meta = this.item_meta.fields.find(df => df.fieldname === fieldname);
 			fieldname === 'discount_percentage' ? (field_meta.label = __('Discount (%)')) : '';
 			const me = this;
-
+			if (!["discount_percentage", "rate"].includes(field_meta.fieldname)) {
+				field_meta.read_only = 1;
+			}
 			this[`${fieldname}_control`] = frappe.ui.form.make_control({
 				df: {
 					...field_meta,
@@ -207,64 +283,13 @@ renting_services.PointOfRent.ItemDetails = class {
 			this[`${fieldname}_control`].set_value(item[fieldname]);
 		});
 
-		this.make_auto_serial_selection_btn(item);
+		// this.make_auto_serial_selection_btn(item);
 
 		this.bind_custom_control_change_event();
 	}
 
 	render_calendar_section(){
 		const me = this;
-		
-		this.$calendar_container.html('');
-		this.$calendar_container.append(
-			`<div class="occ-date-control" data-fieldname="occ_date"></div>
-			
-			<div class="rent-status-sep"> ${__('حالة الحجز')}</div>
-			<div class="before-date-control"></div>
-			<div class="out-date-control" data-fieldname="out_date"></div>
-			<div class="after-date-control" data-fieldname="after_date"></div>
-			`
-		)
-		this.occ_date_control = frappe.ui.form.make_control({
-			df: {
-				label: __('تاريخ المناسبة'),
-				fieldtype: 'Data',
-				read_only:1
-			},
-			parent: this.$calendar_container.find(`.occ-date-control`),
-			render_input: true,
-		})
-		
-		
-		this.before_date_control = frappe.ui.form.make_control({
-			df: {
-				label: __('تاريخ الحجز'),
-				fieldtype: 'Data',
-				read_only:1
-			},
-			parent: this.$calendar_container.find(`.before-date-control`),
-			render_input: true,
-		})
-		this.out_date_control = frappe.ui.form.make_control({
-			df: {
-				label: __('تاريخ الإستلام'),
-				fieldtype: 'Data',
-				read_only:1
-			},
-			parent: this.$calendar_container.find(`.out-date-control`),
-			render_input: true,
-		})
-		this.after_date_control = frappe.ui.form.make_control({
-			df: {
-				label: __('تاريخ الإرجاع'),
-				fieldtype: 'Data',
-				read_only:1
-			},
-			parent: this.$calendar_container.find(`.after-date-control`),
-			render_input: true,
-		})
-
-		this.occ_date_control.set_value(this.occ_date);
 		
 		if (this.occ_date != null){
 			let expected_after = frappe.datetime.add_days(this.occ_date, this.occ_duration);
@@ -274,24 +299,10 @@ renting_services.PointOfRent.ItemDetails = class {
 				method: "renting_services.renting_services.page.renting_pos.renting_pos.check_availability",
 				args: { "before_date": expected_before,
 						"after_date": expected_after,
-						"item_code": [me.current_item.item_code] },
+						"item_code": me.current_item.item_code },
 				callback: (res) => {
 					const rents = res.message;
-					if(rents.length > 0 && !me.items.includes(me.current_item.item_code)){
-						let inv_out_date = rents[0].delivery_date;
-						let inv_return_date = rents[0].return_date;
-						let inv_before_date = frappe.datetime.add_days(inv_out_date, -1);
-	
-						me.before_date_control.set_value(inv_before_date);
-						me.out_date_control.set_value(inv_out_date);
-						me.after_date_control.set_value(inv_return_date);
-						me.$calendar_container.append(
-							`<span class="indicator-pill whitespace-nowrap red no-pill">${__('غير متوفر للحجز')}</span>`);
-					}else{
-						me.$calendar_container.append(
-							`<span class="indicator-pill whitespace-nowrap green ok-pill">${__('متوفر للحجز')}</span>
-							<div class="add-to-cart">${__('إضافة للسلة')}</div>`);
-					}
+					this.$avialability_datatable.refresh(rents);
 				}
 			});
 		}
@@ -342,38 +353,42 @@ renting_services.PointOfRent.ItemDetails = class {
 			this.discount_percentage_control.refresh();
 		}
 
-		if (this.warehouse_control) {
-			this.warehouse_control.df.reqd = 1;
-			this.warehouse_control.df.onchange = function() {
-				if (this.value) {
-					me.events.form_updated(me.current_item, 'warehouse', this.value).then(() => {
-						me.item_stock_map = me.events.get_item_stock_map();
-						const available_qty = me.item_stock_map[me.item_row.item_code][this.value][0];
-						const is_stock_item = Boolean(me.item_stock_map[me.item_row.item_code][this.value][1]);
-						if (available_qty === undefined) {
-							me.events.get_available_stock(me.item_row.item_code, this.value).then(() => {
-								// item stock map is updated now reset warehouse
-								me.warehouse_control.set_value(this.value);
-							})
-						} else if (available_qty === 0 && is_stock_item) {
-							me.warehouse_control.set_value('');
-							const bold_item_code = me.item_row.item_code.bold();
-							const bold_warehouse = this.value.bold();
-							frappe.throw(
-								__('Item Code: {0} is not available under warehouse {1}.', [bold_item_code, bold_warehouse])
-							);
-						}
-						me.actual_qty_control.set_value(available_qty);
-					});
-				}
-			}
-			this.warehouse_control.df.get_query = () => {
-				return {
-					filters: { company: this.events.get_frm().doc.company }
-				}
-			};
-			this.warehouse_control.refresh();
-		}
+		// if (this.warehouse_control) {
+		// 	this.warehouse_control.df.reqd = 1;
+		// 	this.warehouse_control.df.onchange = function() {
+		// 		if (this.value && this.value !== this.warehouse) {
+		// 			me.events.form_updated(me.current_item, 'warehouse', this.value).then(() => {
+		// 				me.item_stock_map = me.events.get_item_stock_map();
+		// 				const available_qty = me.item_Stock_map ? 
+		// 					me.item_stock_map[me.item_row.item_code][this.value][0] : undefined;
+						
+		// 				const is_stock_item = me.item_Stock_map ? 
+		// 					Boolean(me.item_stock_map[me.item_row.item_code][this.value][1]) : undefined;
+		// 				if (available_qty === undefined) {
+		// 					me.events.get_available_stock(me.item_row.item_code, this.value).then(() => {
+		// 						// item stock map is updated now reset warehouse
+		// 						me.warehouse_control.set_value(this.value);
+		// 					})
+		// 				} else if (available_qty === 0 && is_stock_item) {
+		// 					me.warehouse_control.set_value('');
+		// 					const bold_item_code = me.item_row.item_code.bold();
+		// 					const bold_warehouse = this.value.bold();
+		// 					frappe.throw(
+		// 						__('Item Code: {0} is not available under warehouse {1}.', [bold_item_code, bold_warehouse])
+		// 					);
+		// 				}
+		// 				me.actual_qty_control.set_value(available_qty);
+		// 				me.warehouse = this.value;
+		// 			});
+		// 		}
+		// 	}
+		// 	this.warehouse_control.df.get_query = () => {
+		// 		return {
+		// 			filters: { company: this.events.get_frm().doc.company }
+		// 		}
+		// 	};
+		// 	this.warehouse_control.refresh();
+		// }
 
 		if (this.serial_no_control) {
 			this.serial_no_control.df.reqd = 1;
@@ -459,14 +474,21 @@ renting_services.PointOfRent.ItemDetails = class {
 	bind_events() {
 		const me = this;
 		
-		me.bind_auto_serial_fetch_event();
+		// me.bind_auto_serial_fetch_event();
 		me.bind_fields_to_numpad_fields();
 
 		me.$component.on('click', '.close-btn', () => {
 			this.events.close_item_details();
 		});
 
-		me.$component.on('click', '.add-to-cart', async function() {
+		me.$calendar_container.on('click', '.add-serial-to-cart', async function() {
+			const serial_no_or_item_code = unescape($(this).attr('data-value'));
+			if (serial_no_or_item_code !== me.current_item.item_code) {
+				me.current_item["serial_no"] = serial_no_or_item_code;
+			}
+			else {
+				me.current_item["serial_no"] = null;
+			}
 			// if (me.current_item && me.current_item.doctype != "Item"){
 				let args = {
 					field: 'qty',
