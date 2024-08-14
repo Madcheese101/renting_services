@@ -425,7 +425,7 @@ renting_services.PointOfRent.ItemSelector = class {
 		if (search_term) {
 			search_term = search_term.toLowerCase();
 
-			// memoize
+			// memorize
 			this.search_index = this.search_index || {};
 			if (this.search_index[search_term]) {
 				const items = this.search_index[search_term];

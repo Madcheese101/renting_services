@@ -204,15 +204,15 @@ def get_customer_invoices(customer):
 def get_customer_unlinked_payments(customer, payments):
     payments = json.loads(payments)
     fields = ["name",
-              "paid_amount",
-              "mode_of_payment",
-              "posting_date",
-              "name as name_to_print"]
+            "paid_amount",
+            "mode_of_payment",
+            "posting_date",
+            "name as name_to_print"]
     filters = {"party":customer,
-               "payment_type": "Receive",
-               "total_allocated_amount": 0,
-            #    "mode_of_payment":["in", payments],
-               "docstatus": 1}
+            "payment_type": "Receive",
+            "total_allocated_amount": 0,
+        #    "mode_of_payment":["in", payments],
+            "docstatus": 1}
     return frappe.get_all("Payment Entry", fields=fields, filters=filters) or []
 
 @frappe.whitelist()
@@ -602,15 +602,15 @@ def get_transfer_payments(mode_of_payments, date):
     mode_of_payments = json.loads(mode_of_payments)
 
     fields = ["name", 
-              "mode_of_payment", 
-              "posting_date",
-              "paid_amount", 
-              "received_amount", 
-              "(paid_amount - received_amount) as diff_amount"]
+            "mode_of_payment", 
+            "posting_date",
+            "paid_amount", 
+            "received_amount", 
+            "(paid_amount - received_amount) as diff_amount"]
     
     fitlers = {"mode_of_payment": ["in", mode_of_payments],
-               "posting_date": date,
-               "docstatus": 1}
+            "posting_date": date,
+            "docstatus": 1}
     
     return frappe.get_all("Payment Entry", fields=fields, filters=fitlers)
 @frappe.whitelist()

@@ -714,8 +714,7 @@ renting_services.PointOfRent.Controller = class {
 				value = flt(item_row.stock_qty) + flt(value);
 
 			if (item_row_exists) {
-				if (field === 'qty')
-					value = flt(value);
+				if (field === 'qty') value = flt(value);
 
 				// if (['qty', 'conversion_factor'].includes(field) && value > 0 && !this.allow_negative_stock) {
 				// 	const qty_needed = field === 'qty' ? value * item_row.conversion_factor : item_row.qty * value;
