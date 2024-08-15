@@ -5,6 +5,7 @@ renting_services.PointOfRent.ItemDetails = class {
 		this.hide_images = settings.hide_images;
 		this.allow_rate_change = settings.allow_rate_change;
 		this.allow_discount_change = settings.allow_discount_change;
+		this.warehouse = settings.warehouse;
 		this.current_item = {};
 		this.occ_date = null;
 		this.occ_duration = 1;
@@ -299,7 +300,8 @@ renting_services.PointOfRent.ItemDetails = class {
 				method: "renting_services.renting_services.page.renting_pos.renting_pos.check_availability",
 				args: { "before_date": expected_before,
 						"after_date": expected_after,
-						"item_code": me.current_item.item_code },
+						"item_code": me.current_item.item_code,
+						"warehouse": me.warehouse },
 				callback: (res) => {
 					const rents = res.message;
 					this.$avialability_datatable.refresh(rents);

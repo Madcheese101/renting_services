@@ -24,10 +24,10 @@ def get_pos_profile():
         return get_pos_profile_data(profileslist[0])
     
 @frappe.whitelist()
-def check_availability(before_date, after_date, item_code):
+def check_availability(before_date, after_date, item_code, warehouse):
     items_doc = DocType("Sales Invoice Item")
     sales_doc = DocType("Sales Invoice")
-    serials = frappe.get_all("Serial No", filters={"item_code": item_code}, pluck="name")
+    serials = frappe.get_all("Serial No", filters={"item_code": item_code, "warehouse": warehouse}, pluck="name")
     final_result = []
     db_result = (
     frappe.qb
