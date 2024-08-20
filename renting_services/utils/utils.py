@@ -60,12 +60,22 @@ def update_child_ready_qty(parent_doctype, trans_items,
         parent.db_set('total_ready', total_ready)
         
     if process_items:
-        next_doc = frappe.new_doc(next_step_doc)
-        next_doc.invoice_id = parent.invoice_id
-        if next_step_doc == "Repair":
+        if parent_doctype == "Cleaning" and parent.invoice_id:
+            next_doc = frappe.new_doc("Repair")
+            next_doc.invoice_id = parent.invoice_id
+        elif parent_doctype == "Repair" and parent.invoice_id:
+            next_doc = frappe.new_doc("Store Recieve Item")
+            next_doc.invoice_id = parent.invoice_id
             next_doc.cleaning_id = parent.name
-        if next_step_doc == "Store Recieve Item":
+        
+        elif parent_doctype == "Cleaning":
+            next_doc = frappe.new_doc("Store Recieve Item")
+            next_doc.cleaning_id = parent.name
+        elif parent_doctype == "Repair":
+            next_doc = frappe.new_doc("Store Recieve Item")
             next_doc.repair_id = parent.name
+        
+        
         next_doc.notes = new_notes
         next_doc.total_qty = total_ready
         next_doc.set("items", process_items)

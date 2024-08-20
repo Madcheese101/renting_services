@@ -52,8 +52,10 @@ renting_services.common = {
 
                     if(doc.total_ready !== doc.total_qty && doc.status!=='إنتظار'){
                         // Partial Finsih repair/cleaning BTN
+                        const part_finish_lbl = doc.invoice_id ? this.doctypes_defaults[frm.doctype].part_finish : __("إرسال جزئي للمحل");
+                        const full_finish_lbl = doc.invoice_id ? this.doctypes_defaults[frm.doctype].finish : __("إرسال للمحل");
                         frm.add_custom_button(
-                            this.doctypes_defaults[frm.doctype].part_finish,
+                            part_finish_lbl,
                             () => this.choose_dialog({
                                 frm: frm,
                                 child_docname: "items",
@@ -65,7 +67,7 @@ renting_services.common = {
                         
                         // complete finish repair/cleaning BTN
                         frm.add_custom_button(
-                            this.doctypes_defaults[frm.doctype].finish,
+                            full_finish_lbl,
                             () => this.add_notes(doc), //notes dialog before finish clean/repair
                             btn_grp_label
                         );
