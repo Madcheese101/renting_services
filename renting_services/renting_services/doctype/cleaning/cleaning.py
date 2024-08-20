@@ -71,6 +71,7 @@ class Cleaning(Document):
 		self.doc_status = "مكتمل"
 
 		self.flags.ignore_validate_update_after_submit = True
+		self.flags.ignore_mandatory = True
 		self.save(ignore_permissions=True)
 		notes = f"ملاحظات من المحل: <br>  {self.notes} <br> ملاحظات من قسم التنظيف: <br> {new_notes}"
 
@@ -97,9 +98,3 @@ class Cleaning(Document):
 				send_to_store.flags.ignore_permissions=True
 				send_to_store.save()
 				send_to_store.submit()
-
-		
-
-		
-
-    

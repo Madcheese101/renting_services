@@ -1,6 +1,7 @@
 // Copyright (c) 2024, MadCheese and contributors
 // For license information, please see license.txt
 frappe.provide("renting_services.item_process");
+frappe.provide("renting_services");
 
 renting_services.common.setup_renting_controller();
 renting_services.common.CleaningController = class CleaningController extends (renting_services.item_process.CommonFunctions){
