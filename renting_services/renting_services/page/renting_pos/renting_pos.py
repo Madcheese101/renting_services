@@ -253,28 +253,28 @@ def get_customer_linked_payments(customer, payments):
 @frappe.whitelist()
 def deliver_items(sales_invoice_doc, guarantee_type):
     invoice_doc = json.loads(sales_invoice_doc)
-    warehouse = frappe.db.get_value('POS Profile', invoice_doc["pos_profile"], 'warehouse')
-    target_wh = frappe.db.get_value('Warehouse', warehouse, 'reserve_warehouse')
+    # warehouse = frappe.db.get_value('POS Profile', invoice_doc["pos_profile"], 'warehouse')
+    # target_wh = frappe.db.get_value('Warehouse', warehouse, 'reserve_warehouse')
     
     
     
-    doc = frappe.new_doc("Stock Entry")
+    # doc = frappe.new_doc("Stock Entry")
 
-    # Set the necessary fields
-    doc.stock_entry_type = "خروج"
-    doc.company = invoice_doc["company"]
-    doc.flags.ignore_permissions=True
-    # Add items to the Stock Entry
-    for s_item in invoice_doc["items"]:
-        item = doc.append('items', {})
-        item.item_code = s_item["item_code"]
-        item.s_warehouse = warehouse
-        item.t_warehouse = target_wh
-        item.qty = s_item["qty"]
+    # # Set the necessary fields
+    # doc.stock_entry_type = "خروج"
+    # doc.company = invoice_doc["company"]
+    # doc.flags.ignore_permissions=True
+    # # Add items to the Stock Entry
+    # for s_item in invoice_doc["items"]:
+    #     item = doc.append('items', {})
+    #     item.item_code = s_item["item_code"]
+    #     item.s_warehouse = warehouse
+    #     item.t_warehouse = target_wh
+    #     item.qty = s_item["qty"]
 
-    # Insert the new document into the database
-    doc.save()
-    doc.submit()
+    # # Insert the new document into the database
+    # doc.save()
+    # doc.submit()
 
     frappe.db.set_value("Sales Invoice", invoice_doc["name"], "rent_status", "خارج")
     frappe.db.set_value("Sales Invoice", invoice_doc["name"], "guarantee_type", guarantee_type)

@@ -44,30 +44,30 @@ class StoreRecieveItem(Document):
 		profileslist = frappe.db.get_list("POS Profile", filters={"disabled": 0},pluck="name")
 		profile_data = None
 		if profileslist:
-			profile_data =  get_pos_profile_data(profileslist[0])
-			target_wh = profile_data["warehouse"]
-			warehouse = frappe.db.get_value('Warehouse', target_wh, 'reserve_warehouse')
+			# profile_data =  get_pos_profile_data(profileslist[0])
+			# target_wh = profile_data["warehouse"]
+			# warehouse = frappe.db.get_value('Warehouse', target_wh, 'reserve_warehouse')
 			
-			stock_entry = frappe.new_doc("Stock Entry")
-			# Set the necessary fields
-			stock_entry.stock_entry_type = "خروج"
-			stock_entry.company = profile_data["company"]
-			stock_entry.flags.ignore_permissions=True
+			# stock_entry = frappe.new_doc("Stock Entry")
+			# # Set the necessary fields
+			# stock_entry.stock_entry_type = "خروج"
+			# stock_entry.company = profile_data["company"]
+			# stock_entry.flags.ignore_permissions=True
 
-			for item in self.get("items"):
-				child_item = frappe.get_doc("Process Items", item.get("name"))
-				child_item.ready_qty = child_item.qty
-				child_item.flags.ignore_validate_update_after_submit = True
-				child_item.save(ignore_permissions=True)
+			# for item in self.get("items"):
+			# 	child_item = frappe.get_doc("Process Items", item.get("name"))
+			# 	child_item.ready_qty = child_item.qty
+			# 	child_item.flags.ignore_validate_update_after_submit = True
+			# 	child_item.save(ignore_permissions=True)
 
-				stock_entry.append({"item_code": item.item_code,
-						"s_warehouse": warehouse,
-						"t_warehouse":target_wh,
-						"qty":item.qty,
-						})
+			# 	stock_entry.append({"item_code": item.item_code,
+			# 			"s_warehouse": warehouse,
+			# 			"t_warehouse":target_wh,
+			# 			"qty":item.qty,
+			# 			})
 			
-			stock_entry.save()
-			stock_entry.submit()
+			# stock_entry.save()
+			# stock_entry.submit()
 
 			if self.invoice_id:
 				invoice = frappe.get_doc("Sales Invoice", self.invoice_id)
