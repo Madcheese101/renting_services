@@ -22,7 +22,6 @@ class Repair(Document):
 		if self.invoice_id:
 			frappe.db.set_value("Sales Invoice", self.invoice_id, "rent_status", 'نظافة')
 		
-		# TO-DO edit cleaning doc after cancel
 		if self.cleaning_id:
 			for item in self.get("items"):
 				cleaning_item = frappe.get_doc("Process Items", {"item_code":item.item_code, "parent":self.cleaning_id})

@@ -31,6 +31,7 @@ class StoreRecieveItem(Document):
 			parent_doc.doc_status = 'قيد الصيانة' if doctype == "Repair" else 'قيد التنظيف'
 			parent_doc.total_ready = parent_doc.total_ready - self.total_qty
 			parent_doc.flags.ignore_validate_update_after_submit = True
+			parent_doc.flags.ignore_mandatory = True
 			parent_doc.save(ignore_permissions=True)
 
 	def set_user(self):
