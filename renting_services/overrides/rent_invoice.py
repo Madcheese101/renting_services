@@ -44,7 +44,8 @@ class RentInvoice(SalesInvoice):
 		for item in self.get("items"):
 			doc.append("items", {
 				"item_code": item.item_code,
-				"qty": item.qty
+				"qty": item.qty,
+				"serial_no": item.serial_no
 			})
 			total_qty += item.qty
 		doc.total_qty = total_qty
