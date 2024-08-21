@@ -1,0 +1,61 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"w3YP4y1m5z\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Razan</span>\",\"col\":12}},{\"id\":\"hm6Z_3pzG1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0644\u0644\u0645\u062d\u0644\",\"col\":3}},{\"id\":\"jPQKSkCMAf\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629\",\"col\":3}},{\"id\":\"T0LatYctmN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0638\u064a\u0641\",\"col\":3}},{\"id\":\"KqvIwuV6cO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\",\"col\":3}}]",
+ "creation": "2024-08-15 17:04:45.066170",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "color-review-points",
+ "idx": 0,
+ "indicator_color": "pink",
+ "is_hidden": 0,
+ "label": "Razan",
+ "links": [],
+ "modified": "2024-08-21 19:41:32.316774",
+ "modified_by": "Administrator",
+ "module": "Renting Services",
+ "name": "Razan",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0644\u0644\u0645\u062d\u0644",
+   "link_to": "Store Recieve Item",
+   "stats_filter": "[[\"Store Recieve Item\",\"doc_status\",\"=\",\"\u0625\u0646\u062a\u0638\u0627\u0631\",false]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629",
+   "link_to": "Repair",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0638\u064a\u0641",
+   "link_to": "Cleaning",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639",
+   "link_to": "renting-pos",
+   "type": "Page"
+  }
+ ],
+ "title": "Razan"
+}
