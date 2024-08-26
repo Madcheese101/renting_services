@@ -270,6 +270,7 @@ fixtures = [
                     "Mode of Payment Account-custom_middleman_account",
                     "Payment Entry-custom_payment_cleared",
                     "Company-custom_default_advance_payment_clearance_account"
+                    "Customer-custom_special_discount"
                 ),
             ]
         ]
