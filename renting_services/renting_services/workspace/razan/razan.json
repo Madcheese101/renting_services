@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"w3YP4y1m5z\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Razan</span>\",\"col\":12}},{\"id\":\"hm6Z_3pzG1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0644\u0644\u0645\u062d\u0644\",\"col\":3}},{\"id\":\"jPQKSkCMAf\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629\",\"col\":3}},{\"id\":\"T0LatYctmN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0638\u064a\u0641\",\"col\":3}},{\"id\":\"KqvIwuV6cO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\",\"col\":3}}]",
+ "content": "[{\"id\":\"w3YP4y1m5z\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Razan</span>\",\"col\":12}},{\"id\":\"hm6Z_3pzG1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0644\u0644\u0645\u062d\u0644\",\"col\":3}},{\"id\":\"jPQKSkCMAf\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629\",\"col\":3}},{\"id\":\"T0LatYctmN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0638\u064a\u0641\",\"col\":3}},{\"id\":\"KqvIwuV6cO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\",\"col\":3}},{\"id\":\"rD_6Ny7j99\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u064a\u0648\u0645 / \u064a\u0648\u0645 \u0627\u0644\u063a\u062f\",\"col\":3}}]",
  "creation": "2024-08-15 17:04:45.066170",
  "custom_blocks": [],
  "docstatus": 0,
@@ -13,18 +13,25 @@
  "is_hidden": 0,
  "label": "Razan",
  "links": [],
- "modified": "2024-08-21 19:41:32.316774",
+ "modified": "2024-08-30 01:46:44.147005",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Razan",
  "number_cards": [],
- "owner": "Administrator",
+ "owner": "a.kedkd@buhagiar.ly",
  "parent_page": "",
  "public": 1,
  "quick_lists": [],
  "roles": [],
  "sequence_id": 1.0,
  "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u064a\u0648\u0645 / \u064a\u0648\u0645 \u0627\u0644\u063a\u062f",
+   "link_to": "Rents to be Prepared",
+   "type": "Report"
+  },
   {
    "color": "Blue",
    "doc_view": "List",
