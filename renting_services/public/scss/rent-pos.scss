@@ -29,12 +29,20 @@
     margin: 0px var(--margin-sm);
 }
 
+.point-of-sale-app > .items-selector > .filter-section-second-line > .size-field {
+  display: flex;
+  grid-column: span 3 / span 3;
+  align-items: center;
+  margin: 0px var(--margin-sm);
+  grid-column-start: 2 !important;
+}
+
 .point-of-sale-app > .items-selector > .filter-section-second-line > .no-rented-check {
     grid-column: span 2 / span 2;
     display: none;
     align-items: center;
     margin: 0px var(--margin-sm);
-    grid-column-start: 9 !important;
+    // grid-column-start: 9 !important;
     font-weight: 600;
 }
 

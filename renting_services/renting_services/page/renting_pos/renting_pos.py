@@ -408,8 +408,8 @@ def change_rent(new_inv_id, source_name, target_doc=None):
 @frappe.whitelist()
 def get_items(start, page_length, price_list, 
               item_group, pos_profile, search_term="", 
-              no_rented=0, before_date="", after_date=""):
-    
+              no_rented=0, before_date="", after_date="", size_filter=None):
+
     warehouse, hide_unavailable_items = frappe.db.get_value(
         "POS Profile", pos_profile, ["warehouse", "hide_unavailable_items"]
     )
@@ -452,6 +452,18 @@ def get_items(start, page_length, price_list,
     if int(no_rented) == 1 :
         no_serial_items, serial_items = get_available_products(pos_profile, before_date, after_date)
         if no_serial_items: query = query.where((items_doc.name).notin(no_serial_items))
+    
+    if size_filter:
+        variant_doc = frappe.qb.DocType("Item Variant Attribute")
+        query = query.from_(variant_doc)
+        query = query.where(
+            items_doc.name == variant_doc.parent)
+        query = query.where(
+            variant_doc.attribute == "المقاس")
+        query = query.where(
+            variant_doc.attribute_value.like("%"+size_filter+"%")
+        )
+        query = query.groupby(items_doc.name)
 
     if hide_unavailable_items:
         query = (query.from_(bin_doc)
@@ -665,3 +677,14 @@ def get_close_day_report_data(mode_of_payments, date):
 
 	#return data list
 	return data
+
+@frappe.whitelist()
+def get_size_options():
+    options = ["الكل"]
+    db_result = frappe.get_all("Item Attribute Value", 
+                               filters={"parent": "المقاس"}, 
+                               order_by="attribute_value ASC",
+                               pluck="attribute_value"
+                               )
+    options.extend(db_result)
+    return options

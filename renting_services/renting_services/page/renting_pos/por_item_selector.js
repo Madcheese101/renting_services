@@ -14,6 +14,7 @@ renting_services.PointOfRent.ItemSelector = class {
 		this.occ_duration = null;
 		this.allowed_rent_period = settings.allowed_rent_period;
 		this.no_rented = 0;
+		this.current_size = "الكل";
 		this.inti_component();
 	}
 
@@ -35,6 +36,7 @@ renting_services.PointOfRent.ItemSelector = class {
 					<div class="duration-field"></div>
 				</div>
 				<div class="filter-section-second-line">
+					<div class="size-field"></div>
 					<div class="no-rented-check"></div>
 				</div>
 				<div class="items-container"></div>
@@ -65,15 +67,15 @@ renting_services.PointOfRent.ItemSelector = class {
 		const price_list = (doc && doc.selling_price_list) || this.price_list;
 		let { item_group, pos_profile, 
 			no_rented, before_date, after_date } = this;
-
+		
 		!item_group && (item_group = this.parent_item_group);
-
+		let size_filter = this.current_size == "الكل" ? null : this.current_size;
 		return frappe.call({
 			method: "renting_services.renting_services.page.renting_pos.renting_pos.get_items",
 			freeze: true,
 			args: { start, page_length, price_list, 
 				item_group, search_term, pos_profile, no_rented,
-			before_date, after_date },
+			before_date, after_date, size_filter },
 		});
 	}
 
@@ -158,6 +160,7 @@ renting_services.PointOfRent.ItemSelector = class {
 		this.$component.find('.occ-date-field').html('');
 		this.$component.find('.duration-field').html('');
 		this.$component.find('.no-rented-check').html('');
+		this.$component.find('.size-field').html('');
 
 		this.search_field = frappe.ui.form.make_control({
 			df: {
@@ -207,11 +210,33 @@ renting_services.PointOfRent.ItemSelector = class {
 			parent: this.$component.find('.no-rented-check'),
 			render_input: true,
 		});
-		
+		this.size_field = frappe.ui.form.make_control({
+			df: {
+				label: __('المقاس'),
+				fieldtype: 'Select',
+				placeholder: __('المقاس'),
+				onchange: function() {
+					if(this.value !== me.current_size){
+						me.current_size = this.value;
+						me.filter_items();
+					}
+				}
+			},
+			parent: this.$component.find('.size-field'),
+			render_input: true,
+		});
+		this.get_size_options();
 		this.duration_field.set_value(1);
 		this.attach_clear_btn();
 	}
 
+	async get_size_options(){
+		let result = await frappe.call({
+			method: 'renting_services.renting_services.page.renting_pos.renting_pos.get_size_options',
+			});
+		this.size_field.df.options = result.message;
+		this.size_field.set_options();
+	}
 	set_dates(date){
 		if (!date){
 			this.events.set_occ_date(date);
