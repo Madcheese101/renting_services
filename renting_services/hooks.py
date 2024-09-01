@@ -302,7 +302,8 @@ fixtures = [
                     "Sales Invoice-currency_and_price_list-depends_on", 
                     "Sales Invoice-accounting_dimensions_section-depends_on",
                     "Customer-customer_type-default",
-                    "Customer-customer_type-hidden"
+                    "Customer-customer_type-hidden",
+                    "Item-main-default_print_format"
                 ),
             ]
         ]
