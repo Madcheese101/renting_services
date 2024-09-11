@@ -572,7 +572,7 @@ renting_services.PointOfRent.Controller = class {
 	submit_inv(payments){
 		this.frm.savesubmit()
 			.then(async (r) => {
-				if(payments){
+				if(this.frm.doc.original_invoice){
 					await this.frm.call({
 								method: "change_rent",
 								doc: this.frm.doc,

@@ -124,6 +124,7 @@ class RentInvoice(SalesInvoice):
 			return_invoice.is_pos = 0
 			return_invoice.update_stock = 0
 			return_invoice.update_outstanding_for_self = 0
+			return_invoice.flags.ignore_permissions=True
 			return_invoice.save()
 			return_invoice.submit()
 
@@ -131,7 +132,8 @@ class RentInvoice(SalesInvoice):
 			frappe.db.set_value("Sales Invoice", self.original_invoice, "change_invoice", self.name)
 			frappe.db.commit()
 
-			for payment in payments:
+			payments_data = payments or []
+			for payment in payments_data:
 				reference_no = ""
 				if (payment["type"] == "Bank"):
 					reference_no = f'{return_invoice.name} - {frappe.datetime.nowdate()}'
