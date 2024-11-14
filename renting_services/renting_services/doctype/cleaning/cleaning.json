@@ -15,6 +15,8 @@
   "posting_date",
   "accept_date",
   "ready_date",
+  "cleaning_branch",
+  "branch",
   "section_break_r2cv2",
   "items",
   "doc_status",
@@ -125,12 +127,26 @@
    "label": "\u0627\u0644\u062d\u0627\u0644\u0629",
    "options": "\u0625\u0646\u062a\u0638\u0627\u0631\n\u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0638\u064a\u0641\n\u0645\u0643\u062a\u0645\u0644\n\u0645\u0643\u062a\u0645\u0644 \u062c\u0632\u0626\u064a",
    "read_only": 1
+  },
+  {
+   "fieldname": "cleaning_branch",
+   "fieldtype": "Link",
+   "label": "\u0642\u0633\u0645 \u0627\u0644\u062a\u0646\u0638\u064a\u0641",
+   "link_filters": "[[\"Branch\",\"type\",\"=\",\"\u062a\u0646\u0638\u064a\u0641\"]]",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "\u0627\u0644\u0645\u062d\u0644",
+   "link_filters": "[[\"Branch\",\"type\",\"=\",null]]",
+   "options": "Branch"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-04-19 15:13:50.876834",
+ "modified": "2024-11-14 23:29:22.892923",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Cleaning",
