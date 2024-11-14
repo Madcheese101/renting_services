@@ -270,7 +270,17 @@ fixtures = [
                     "Mode of Payment Account-custom_middleman_account",
                     "Payment Entry-custom_payment_cleared",
                     "Company-custom_default_advance_payment_clearance_account"
-                    "Customer-custom_special_discount"
+                    "Customer-custom_special_discount",
+                    "Branch-custom_type",
+                    "Branch-custom_pos_profile",
+                    "Branch-parent_account",
+                    "Branch-custom_section_break_fmcjc",
+                    "Branch-custom_column_break_43a4r",
+                    "Branch-custom_section_break_6cxlj",
+                    "Branch-custom_column_break_dv7kz",
+                    "Branch-custom_قسم_الصيانة",
+                    "Branch-custom_قسم_التنظيف"
+                    
                 ),
             ]
         ]
