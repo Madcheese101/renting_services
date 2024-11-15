@@ -3,10 +3,12 @@ from frappe import _
 from frappe.utils import flt, getdate, nowdate
 
 @frappe.whitelist()
-def send_item_to_cleaning(item_code, user=None, notes=None):
+def send_item_to_cleaning(item_code, user=None, notes=None, cleaning_branch=None, branch=None):
     doc = frappe.new_doc("Cleaning")
     doc.invoice_id = None
     doc.employee = user
+    doc.cleaning_branch = cleaning_branch or frappe.session.cleaning_branch
+    doc.branch = branch or frappe.session.branch
     if user:
         doc.employee = user
         doc.status = "قيد التنظيف"
@@ -24,10 +26,12 @@ def send_item_to_cleaning(item_code, user=None, notes=None):
     doc.submit()
 
 @frappe.whitelist()
-def send_item_to_repair(item_code, user=None, notes=None):
+def send_item_to_repair(item_code, user=None, notes=None, repair_branch=None, branch=None):
     doc = frappe.new_doc("Repair")
     doc.invoice_id = None
     doc.employee = user
+    doc.repair_branch = repair_branch or frappe.session.repair_branch
+    doc.branch = branch or frappe.session.branch
     if user:
         doc.employee = user
         doc.status = "قيد الصيانة"
