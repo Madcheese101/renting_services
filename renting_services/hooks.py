@@ -240,6 +240,7 @@ scheduler_events = {
 #	"renting_services.auth.validate"
 # ]
 
+boot_session = "renting_services.api.custom_boot_loaded"
 fixtures = [
     {
         "doctype": "Custom Field",

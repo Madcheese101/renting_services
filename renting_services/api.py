@@ -43,3 +43,23 @@ def send_item_to_repair(item_code, user=None, notes=None):
     doc.flags.ignore_permissions=True
     doc.save()
     doc.submit()
+
+def custom_boot_loaded(bootinfo):
+    cleaning_branch, repair_branch, pos_profile = None, None, None
+    branch = frappe.get_value("Employee", {"user_id": bootinfo["user"]["name"]}, "branch")
+    is_store_employee = 0 if 'Accounts Manager' in bootinfo["user"]["roles"] else 1
+    if branch:
+        cleaning_branch, repair_branch, pos_profile  = frappe.get_value("Branch", {"name": branch}, 
+                                                                        ["cleaning_branch", "repair_branch", "pos_profile"])
+
+    bootinfo.branch = branch
+    bootinfo.cleaning_branch = cleaning_branch
+    bootinfo.repair_branch = repair_branch
+    bootinfo.pos_profile = pos_profile
+    bootinfo.is_store_employee = is_store_employee
+
+    frappe.session["data"]["branch"] = branch
+    frappe.session["data"]["cleaning_branch"] = cleaning_branch
+    frappe.session["data"]["repair_branch"] = repair_branch
+    frappe.session["data"]["pos_profile"] = pos_profile
+    frappe.session["data"]["is_store_employee"] = is_store_employee
