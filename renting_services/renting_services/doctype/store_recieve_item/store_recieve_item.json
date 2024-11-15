@@ -17,6 +17,9 @@
   "posting_date",
   "accept_date",
   "ready_date",
+  "branch",
+  "cleaning_branch",
+  "repair_branch",
   "section_break_r2cv2",
   "items",
   "doc_status",
@@ -139,12 +142,33 @@
    "label": "\u0627\u0644\u062d\u0627\u0644\u0629",
    "options": "\u0625\u0646\u062a\u0638\u0627\u0631\n\u0642\u064a\u062f \u0627\u0644\u0635\u064a\u0627\u0646\u0629\n\u0645\u0643\u062a\u0645\u0644\n\u0645\u0643\u062a\u0645\u0644 \u062c\u0632\u0626\u064a",
    "read_only": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "\u0627\u0644\u0645\u062d\u0644",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cleaning_branch",
+   "fieldtype": "Link",
+   "label": "\u0642\u0633\u0645 \u0627\u0644\u062a\u0646\u0638\u064a\u0641",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "repair_branch",
+   "fieldtype": "Link",
+   "label": "\u0642\u0633\u0645 \u0627\u0644\u0635\u064a\u0627\u0646\u0629",
+   "options": "Branch",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-09 19:59:53.544167",
+ "modified": "2024-11-15 00:30:23.977419",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Store Recieve Item",
