@@ -279,6 +279,7 @@ fixtures = [
                     "Branch-custom_column_break_43a4r",
                     "Branch-custom_section_break_6cxlj",
                     "Branch-custom_column_break_dv7kz",
+                    "Branch-custom_type",
                     "Branch-custom_قسم_الصيانة",
                     "Branch-custom_قسم_التنظيف"
                     
