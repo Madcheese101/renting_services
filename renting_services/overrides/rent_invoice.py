@@ -40,6 +40,14 @@ class RentInvoice(SalesInvoice):
 			doc.status = "قيد التنظيف"
 			doc.accept_date = nowdate()
 		
+		if frappe.session.is_store_employee == 1:
+			doc.cleaning_branch = frappe.session.cleaning_branch
+			doc.branch = frappe.session.branch
+		else:
+			branch, cleaning_branch = frappe.get_value("Branch", {"pos_profile": self.pos_profile}, ["name", "cleaning_branch"])
+			doc.cleaning_branch = cleaning_branch
+			doc.branch = branch
+		
 		total_qty = 0
 		for item in self.get("items"):
 			doc.append("items", {

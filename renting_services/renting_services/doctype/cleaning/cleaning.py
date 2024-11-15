@@ -80,6 +80,9 @@ class Cleaning(Document):
 				repair = frappe.new_doc("Repair")
 				repair.invoice_id = self.invoice_id
 				repair.cleaning_id = self.name
+				if self.branch:
+					repair.repair_branch = frappe.get_value("Branch", self.branch, "repair_branch")
+					repair.branch = self.branch
 				repair.total_qty = total_ready
 				repair.set("items", repair_items)
 				repair.notes = notes
@@ -91,6 +94,8 @@ class Cleaning(Document):
 				send_to_store = frappe.new_doc("Store Recieve Item")
 				send_to_store.invoice_id = self.invoice_id
 				send_to_store.cleaning_id = self.name
+				send_to_store.cleaning_branch = self.cleaning_branch
+				send_to_store.branch = self.branch
 				send_to_store.total_qty = total_ready
 				send_to_store.set("items", repair_items)
 				send_to_store.notes = notes
