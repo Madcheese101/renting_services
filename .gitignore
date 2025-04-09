@@ -6,3 +6,4 @@ tags
 renting_services/docs/current
 node_modules/
 renting_services/public/dist/
+renting_services/public/node_modules/
