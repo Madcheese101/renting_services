@@ -18,9 +18,12 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_company_def
 
 @frappe.whitelist()
 def get_pos_profile():
+    default_pos_profile = frappe.db.get_value("POS Profile User", {"default": 1, "user": frappe.session.user}, "parent")
     profileslist = frappe.db.get_list("POS Profile", filters={"disabled": 0},pluck="name")
 
-    if profileslist:
+    if default_pos_profile:
+        return get_pos_profile_data(default_pos_profile)
+    elif profileslist:
         return get_pos_profile_data(profileslist[0])
     
 @frappe.whitelist()
