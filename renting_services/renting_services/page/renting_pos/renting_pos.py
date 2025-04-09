@@ -28,29 +28,30 @@ def get_pos_profile():
     
 @frappe.whitelist()
 def check_availability(before_date, after_date, item_code, warehouse):
-    items_doc = DocType("Sales Invoice Item")
+    sale_items_doc = DocType("Sales Invoice Item")
     sales_doc = DocType("Sales Invoice")
     serials = frappe.get_all("Serial No", filters={"item_code": item_code, "warehouse": warehouse}, pluck="name")
+    has_serial = frappe.db.get_value("Item", item_code, "has_serial_no")
     final_result = []
     db_result = (
     frappe.qb
         .from_(sales_doc)
-        .from_(items_doc)
+        .from_(sale_items_doc)
         .select(
             sales_doc.name, 
             sales_doc.delivery_date, 
             sales_doc.return_date, 
-            items_doc.item_name,
-            items_doc.serial_no
+            sale_items_doc.item_name,
+            sale_items_doc.serial_no
         )
-        .where(items_doc.parent == sales_doc.name)
-        .where(items_doc.item_code == item_code)
+        .where(sale_items_doc.parent == sales_doc.name)
+        .where(sale_items_doc.item_code == item_code)
         .where(sales_doc.docstatus == 1)
         .where(sales_doc.delivery_date[before_date:after_date])
         # .where(sales_doc.paid_amount > 0)
     ).run(as_dict=True)
 
-    if serials:
+    if serials and has_serial == 1:
         db_result_dict = {i["serial_no"]: i for i in db_result}
         for serial in serials:
             if serial in db_result_dict.keys():
@@ -60,13 +61,13 @@ def check_availability(before_date, after_date, item_code, warehouse):
                 final_result.append(db_result_dict[serial])
             else:
                 final_result.append({"serial_no": serial,"add_to_cart":serial, "avialable_status": True})
-    elif db_result:
+    elif db_result and has_serial == 0:
         temp_dic = {**db_result[0], 
                     "avialable_status": False, 
                     "before_date": add_to_date(db_result[0]["delivery_date"], days=-1),
                     "add_to_cart": None}
         final_result.append(temp_dic)
-    else:
+    elif has_serial == 0:
         final_result.append({"avialable_status": True, "add_to_cart": item_code})
     
     return final_result

@@ -60,7 +60,7 @@ renting_services.PointOfRent.ItemDetails = class {
 		this.$calendar_container = this.$component.find('.calendar-container');
 
 		let button_formatter = (value) => {
-			if (value) {
+			if (value !== undefined && value !== null && value !== '') {
 				return `<div class="add-serial-to-cart" data-value="${value}">اضافة للسلة</div>`;
 			}else{ return "";}
 		}
