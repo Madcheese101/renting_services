@@ -163,40 +163,6 @@ class RentInvoice(SalesInvoice):
 				payment_doc.save()
 				payment_doc.submit()
 
-	# def get_advance_entries(self, include_unallocated=True):
-	# 	party_account = []
-	# 	if self.doctype == "Sales Invoice":
-	# 		party_type = "Customer"
-	# 		party = self.customer
-	# 		amount_field = "credit_in_account_currency"
-	# 		order_field = "sales_order"
-	# 		order_doctype = "Sales Order"
-	# 		party_account.append(self.debit_to)
-	# 	else:
-	# 		party_type = "Supplier"
-	# 		party = self.supplier
-	# 		amount_field = "debit_in_account_currency"
-	# 		order_field = "purchase_order"
-	# 		order_doctype = "Purchase Order"
-	# 		party_account.append(self.credit_to)
-
-	# 	party_account.extend(
-	# 		get_party_account(party_type, party=party, company=self.company, include_advance=True)
-	# 	)
-
-	# 	order_list = list(set(d.get(order_field) for d in self.get("items") if d.get(order_field)))
-
-	# 	journal_entries = get_advance_journal_entries(
-	# 		party_type, party, party_account, amount_field, order_doctype, order_list, include_unallocated
-	# 	)
-
-	# 	payment_entries = get_advance_payment_entries_for_regional(
-	# 		party_type, party, party_account, order_doctype, order_list, include_unallocated
-	# 	)
-
-	# 	res = journal_entries + payment_entries
-
-	# 	return res
 @frappe.whitelist()
 def get_payment_entry(
 	dt,

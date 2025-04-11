@@ -76,8 +76,6 @@ def check_year_old_unallocated_payments():
             "party": payment_entry.party,
             "credit_in_account_currency": 0,
             "debit_in_account_currency": payment_entry.unallocated_amount,
-            "reference_type": "Payment Entry",
-            "reference_name": payment_entry.name,
             "cost_center": payment_entry.cost_center})
 
     je.append("accounts", {
@@ -100,7 +98,7 @@ def check_year_old_unallocated_payments():
         pr = frappe.get_doc({
             "doctype": "Payment Reconciliation",
             "company": company,
-            "party": "نادية",  # Replace with actual customer name
+            "party": pe.party,  # Replace with actual customer name
             "party_type": "Customer",
             "receivable_payable_account": receivable_payable_account,
             "invoices": [
@@ -126,8 +124,5 @@ def check_year_old_unallocated_payments():
             invoices = [x.as_dict() for x in pr.invoices]
             payments = [x.as_dict() for x in pr.payments]
             pr.allocate_entries(({"invoices": invoices, "payments": payments}))
-        pr.reconcile_allocations() #skip_ref_details_update_for_pe=True
+        pr.reconcile() #skip_ref_details_update_for_pe=True
         frappe.db.commit()
-
-
-    
