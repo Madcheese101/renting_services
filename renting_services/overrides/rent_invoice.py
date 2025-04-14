@@ -91,7 +91,7 @@ class RentInvoice(SalesInvoice):
 		for key, value in mode_of_payments_info.items():
 			modes.append({"mode_of_payment": key, 
 					"account": value.default_account, 
-					"type": value.type, "base_amount": 0})
+					"type": value.type, "base_amount": 0, "cost_center": pos.get("cost_center")})
 			
 		return modes or "nothing"
 	
@@ -174,7 +174,8 @@ def get_payment_entry(
 	payment_type=None,
 	reference_date=None,
 	reference_no=None,
-	mode_of_payment=None
+	mode_of_payment=None,
+	cost_center=None
 ):
 	# eval:(doc.paid_from_account_type == 'Bank' || doc.paid_to_account_type == 'Bank')
 	doc = frappe.get_doc(dt, dn)
@@ -241,7 +242,7 @@ def get_payment_entry(
 	pe.paid_amount = paid_amount
 	pe.received_amount = received_amount
 	pe.letter_head = doc.get("letter_head")
-
+	pe.cost_center = cost_center
 	if dt in ["Purchase Order", "Sales Order", "Sales Invoice", "Purchase Invoice"]:
 		pe.project = doc.get("project") or reduce(
 			lambda prev, cur: prev or cur, [x.get("project") for x in doc.get("items")], None

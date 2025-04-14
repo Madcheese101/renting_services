@@ -536,13 +536,13 @@ renting_services.PointOfRent.PastOrderSummary = class {
 		'New Order'] }];
 
 		return [
-			{ condition: this.doc.docstatus === 0, visible_btns: ['Edit Order', //'Delete Order'
+			{ condition: this.doc.docstatus === 0, visible_btns: ['Edit Order','New Order', //'Delete Order'
 
 			] },
-			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print', //'Email Receipt'
+			{ condition: !this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print','New Order', //'Email Receipt'
 
 			]},
-			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print', //'Email Receipt'
+			{ condition: this.doc.is_return && this.doc.docstatus === 1, visible_btns: ['Print','New Order', //'Email Receipt'
 
 			]}
 		];
@@ -785,6 +785,8 @@ renting_services.PointOfRent.PastOrderSummary = class {
 										fieldtype: 'Data', label: 'Account'},
 									{ fieldname: 'type',
 										fieldtype: 'Data', label: 'Type'},
+									{ fieldname: 'cost_center',
+										fieldtype: 'Data', label: 'Cost Center'},
 									{ fieldname: 'base_amount', 
 										fieldtype: 'Currency', label: 'Amount', in_list_view: 1 }
 								]
@@ -805,7 +807,8 @@ renting_services.PointOfRent.PastOrderSummary = class {
 									await me.make_rent_payment_entry({"mode_of_payment":p.mode_of_payment,
 										"account":p.account,
 										"bank_amount":p.base_amount,
-										"type":p.type})
+										"type":p.type,
+										"cost_center":p.cost_center})
 								}
 							}
 							d.hide();
@@ -836,7 +839,8 @@ renting_services.PointOfRent.PastOrderSummary = class {
 				"mode_of_payment": payment_details.mode_of_payment,
 				"bank_account":payment_details.account,
 				"bank_amount":payment_details.bank_amount,
-				"reference_no":reference_no};
+				"reference_no":reference_no,
+				"cost_center":payment_details.cost_center};
 			await this.make_mapped_rent_payment_entry(args);
 		}
 	}
