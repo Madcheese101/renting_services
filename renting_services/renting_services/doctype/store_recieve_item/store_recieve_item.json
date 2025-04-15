@@ -39,9 +39,12 @@
   {
    "fieldname": "invoice_id",
    "fieldtype": "Link",
+   "in_filter": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "\u0631\u0642\u0645 \u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u0625\u064a\u062c\u0627\u0631",
-   "options": "Sales Invoice"
+   "options": "Sales Invoice",
+   "search_index": 1
   },
   {
    "fieldname": "cleaning_id",
@@ -53,7 +56,8 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_filter": 1,
+   "in_standard_filter": 1,
    "label": "\u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0645\u0633\u062a\u0644\u0645",
    "options": "User"
   },
@@ -62,6 +66,7 @@
    "fetch_if_empty": 1,
    "fieldname": "employee_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641",
    "read_only": 1
   },
@@ -73,6 +78,9 @@
    "default": "Today",
    "fieldname": "posting_date",
    "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "\u0627\u0644\u062a\u0627\u0631\u064a\u062e",
    "read_only": 1
   },
@@ -137,6 +145,7 @@
   {
    "fieldname": "doc_status",
    "fieldtype": "Select",
+   "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "\u0627\u0644\u062d\u0627\u0644\u0629",
@@ -165,10 +174,11 @@
    "read_only": 1
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-15 00:30:23.977419",
+ "modified": "2025-04-15 08:42:12.963020",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Store Recieve Item",
@@ -207,9 +217,12 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "invoice_id",
  "track_changes": 1,
  "track_seen": 1,
  "track_views": 1

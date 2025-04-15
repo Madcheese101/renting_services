@@ -13,7 +13,7 @@
  "is_hidden": 0,
  "label": "Razan",
  "links": [],
- "modified": "2024-08-30 01:46:44.147005",
+ "modified": "2025-04-15 07:31:50.783670",
  "modified_by": "Administrator",
  "module": "Renting Services",
  "name": "Razan",
@@ -30,7 +30,16 @@
    "doc_view": "List",
    "label": "\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u064a\u0648\u0645 / \u064a\u0648\u0645 \u0627\u0644\u063a\u062f",
    "link_to": "Rents to be Prepared",
+   "report_ref_doctype": "Sales Invoice",
    "type": "Report"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629",
+   "link_to": "Repair",
+   "stats_filter": "[[\"Repair\",\"doc_status\",\"!=\",\"\u0645\u0643\u062a\u0645\u0644\",false]]",
+   "type": "DocType"
   },
   {
    "color": "Blue",
@@ -41,19 +50,11 @@
    "type": "DocType"
   },
   {
-   "color": "Orange",
-   "doc_view": "List",
-   "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0635\u064a\u0627\u0646\u0629",
-   "link_to": "Repair",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
    "color": "Green",
    "doc_view": "List",
    "label": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0638\u064a\u0641",
    "link_to": "Cleaning",
-   "stats_filter": "[]",
+   "stats_filter": "[[\"Cleaning\",\"doc_status\",\"!=\",\"\u0645\u0643\u062a\u0645\u0644\",false]]",
    "type": "DocType"
   },
   {
