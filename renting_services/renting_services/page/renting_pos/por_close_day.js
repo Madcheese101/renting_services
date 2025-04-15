@@ -154,7 +154,7 @@ renting_services.PointOfRent.CloseDay = class {
 					{ fieldname: 'paid_amount', 
 						fieldtype: 'Currency', label: 'المدفوع', in_list_view: 1,
 						precision:1,
-						change: function() {
+						onchange: function(r) {
 							const val = this.get_value()
 							const account_balance = this.grid_row.on_grid_fields_dict.account_balance.get_value();
 							const diff = account_balance - val;
