@@ -279,3 +279,102 @@ def get_base64_img(path="./assets/renting_services/js/output.png"):
         base64_bytes = base64.b64encode(image_file.read())
         # frappe.msgprint(base64_bytes)
         return  base64_bytes #base64_bytes
+    
+@frappe.whitelist()
+def create_new_size(size):
+    exists = frappe.db.exists("Item Attribute Value", {"parent": "المقاس", "attribute_value": size})
+
+    if not exists:
+        size_att_doc = frappe.get_doc("Item Attribute", "المقاس")
+        abbr = size_att_doc.get("item_attribute_values")[-1].get("abbr") if size_att_doc.get("item_attribute_values") else "0"
+        abbr = str(int(abbr)+1).zfill(2)
+        size_att_doc.append("item_attribute_values", {
+            "attribute_value": size,
+            "abbr": abbr
+        })
+        size_att_doc.save()
+        frappe.msgprint(f"تم إضافة المقاس {size} بنجاح")
+    else:
+        frappe.msgprint(f"المقاس {size} موجود بالفعل")
+
+@frappe.whitelist()
+def create_new_color(color):
+    exists = frappe.db.exists("Item Attribute Value", {"parent": "اللون", "attribute_value": color})
+    if not exists:
+        size_att_doc = frappe.get_doc("Item Attribute", "اللون")
+        abbr = size_att_doc.get("item_attribute_values")[-1].get("abbr") if size_att_doc.get("item_attribute_values") else "0"
+        abbr = str(int(abbr)+1).zfill(2)
+        size_att_doc.append("item_attribute_values", {
+            "attribute_value": color,
+            "abbr": abbr
+        })
+        size_att_doc.save()
+        frappe.msgprint(f"تم إضافة اللون {color} بنجاح")
+    else:
+        frappe.msgprint(f"اللون {color} موجود بالفعل")
+
+@frappe.whitelist()
+def create_new_code(code):
+    exists = frappe.db.exists("Item Attribute Value", {"parent": "الكود", "attribute_value": code})
+
+    if not exists:
+        size_att_doc = frappe.get_doc("Item Attribute", "المقاس")
+        # abbr = size_att_doc.get("item_attribute_values")[-1].get("abbr") if size_att_doc.get("item_attribute_values") else "0"
+        # abbr = str(int(abbr)+1).zfill(2)
+        size_att_doc.append("item_attribute_values", {
+            "attribute_value": code,
+            "abbr": code
+        })
+        size_att_doc.save()
+        frappe.msgprint(f"تم إضافة الكود {code} بنجاح")
+    else:
+        frappe.msgprint(f"الكود {code} موجود بالفعل")
+
+@frappe.whitelist()
+def get_attributes():
+    colors = frappe.db.get_all("Item Attribute Value", filters={"parent": "اللون"}, pluck="attribute_value", order_by="attribute_value ASC")
+    sizes = frappe.db.get_all("Item Attribute Value", filters={"parent": "المقاس"}, pluck="attribute_value", order_by="attribute_value ASC")
+    codes = frappe.db.get_all("Item Attribute Value", filters={"parent": "الكود"}, pluck="attribute_value", order_by="attribute_value ASC")
+
+    return {
+        "colors": colors,
+        "sizes": sizes,
+        "codes": codes
+    }
+
+@frappe.whitelist()
+def create_new_item(code, color, size):
+    size_abbr = frappe.db.get_value("Item Attribute Value", {"parent": "المقاس", "attribute_value": size}, "abbr")
+    color_abbr = frappe.db.get_value("Item Attribute Value", {"parent": "اللون", "attribute_value": color}, "abbr")
+    code_ = code.zfill(4)
+    final_item_code = f"{code_}.{color_abbr}.{size_abbr}"
+    item_name = f"فستان {code_} {color} مقاس {size}"
+
+    item_exists = frappe.db.exists("Item", final_item_code)
+    if item_exists:
+        frappe.msgprint(f"الصنف {final_item_code} موجود بالفعل")
+        return
+    
+    item = frappe.new_doc("Item")
+
+    item.item_code = final_item_code
+    item.item_name = item_name
+    item.item_group = "فساتين"
+    item.stock_uom = "قطعة"
+
+    item.append("attributes", {
+        "attribute": "الكود",
+        "attribute_value": code
+    })
+    item.append("attributes", {
+        "attribute": "المقاس",
+        "attribute_value": size
+    })
+    item.append("attributes", {
+        "attribute": "اللون",
+        "attribute_value": color
+    })
+
+    item.save()
+    frappe.msgprint(f"تم إضافة الصنف {final_item_code} بنجاح")
+
