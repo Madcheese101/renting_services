@@ -319,5 +319,11 @@ fixtures = [
                 ),
             ]
         ]
+    },
+    {
+        "doctype": "Workspace",
+        "filters": {
+            "module": ["=", "Renting Services"]
+        }
     }
 ]
