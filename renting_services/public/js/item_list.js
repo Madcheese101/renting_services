@@ -13,7 +13,7 @@ frappe.listview_settings['Item'] = {
             "إدارة الأصناف");
         listview.page.add_inner_button(__('اضافة كود جديد'), 
             function() {                
-                renting_services.create_new_size();
+                renting_services.create_new_code();
             },
             "إدارة الأصناف");
         listview.page.add_inner_button(__('اضافة صنف جديد'), 
