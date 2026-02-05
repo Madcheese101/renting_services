@@ -21,7 +21,7 @@ renting_services.create_new_color = function () {
         fieldname: 'color',
         fieldtype: 'Data'
     }, (values) => {
-        frappe.call("renting_services.utils.utils.create_new_color", {size: values.color});
+        frappe.call("renting_services.utils.utils.create_new_color", {color: values.color});
     },
     'ادخل اللون الجديد',
     "حفظ")
@@ -34,7 +34,7 @@ renting_services.create_new_code = function () {
         fieldname: 'code',
         fieldtype: 'Data'
     }, (values) => {
-        frappe.call("renting_services.utils.utils.create_new_code", {size: values.code});
+        frappe.call("renting_services.utils.utils.create_new_code", {code: values.code});
     },
     'ادخل الكود الجديد',
     "حفظ")
